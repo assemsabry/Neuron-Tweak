@@ -57,6 +57,14 @@ neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom
 neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
   --custom "L14 N8949 +1, L13 N7956 -1" --save-directory ./qwen-custom
 
+# Edit a specific MLP projection instead of the default down_proj.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
+  --custom "L14 N8949 -1" --target gate_proj --save-directory ./qwen-gate
+
+# Edit up_proj, gate_proj, and down_proj together.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
+  --custom "L14 N8949 -1" --target all --save-directory ./qwen-all
+
 # Read a plan from a file and validate it without loading the model.
 neuron-tweak --profile custom --custom-file edits.txt --dry-run
 ```
@@ -82,11 +90,22 @@ L<layer> N<neuron> <delta>
   when the plan is applied.
 - Entries can be separated by commas, semicolons, or newlines.
 
+`--target` selects the projection:
+
+| Target | What is scaled | Shape |
+|--------|----------------|-------|
+| `down_proj` (default) | Column `i` | `(hidden, intermediate)` |
+| `up_proj` | Row `i` | `(intermediate, hidden)` |
+| `gate_proj` | Row `i` | `(intermediate, hidden)` |
+| `all` | Row `i` of up and gate, column `i` of down | all three |
+
 Editing `down_proj` is enough to control the neuron: the column maps that MLP
 neuron back to the hidden dimension, so scaling it scales the neuron's
 contribution to the residual stream without touching the up or gate
-projections. See [`docs/custom_tweak.md`](docs/custom_tweak.md) for the full
-guide, including the interactive editor, validation rules, and limits.
+projections. Use `up_proj` or `gate_proj` when you want to change the neuron's
+input path or gating, and `all` when you want to remove it from every stage of
+the MLP. See [`docs/custom_tweak.md`](docs/custom_tweak.md) for the full guide,
+including the interactive editor, validation rules, and limits.
 
 ## Repository layout
 

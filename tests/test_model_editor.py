@@ -102,3 +102,62 @@ def test_save_writes_model_files(runtime, tmp_path):
 
     assert (target / "config.json").is_file()
     assert list(target.glob("*.safetensors"))
+
+
+def test_apply_up_proj(runtime):
+    weight = runtime.model.model.layers[0].mlp.up_proj.weight
+    original = weight[0].detach().clone()
+
+    runtime.apply_plan(NeuronPlan.from_text("L1 N0 +1"), target="up_proj")
+
+    torch.testing.assert_close(weight[0], original * 2)
+
+
+def test_apply_gate_proj_deletes_row(runtime):
+    weight = runtime.model.model.layers[0].mlp.gate_proj.weight
+
+    runtime.apply_plan(NeuronPlan.from_text("L1 N0 -1"), target="gate_proj")
+
+    assert torch.count_nonzero(weight[0]) == 0
+
+
+def test_apply_all_projections(runtime):
+    mlp = runtime.model.model.layers[0].mlp
+    up_original = mlp.up_proj.weight[0].detach().clone()
+    gate_original = mlp.gate_proj.weight[0].detach().clone()
+    down_original = mlp.down_proj.weight[:, 0].detach().clone()
+
+    results = runtime.apply_plan(
+        NeuronPlan.from_text("L1 N0 +1"), target="all"
+    )
+
+    assert len(results) == 3
+    assert {result.projection for result in results} == {
+        "up_proj",
+        "gate_proj",
+        "down_proj",
+    }
+    torch.testing.assert_close(mlp.up_proj.weight[0], up_original * 2)
+    torch.testing.assert_close(mlp.gate_proj.weight[0], gate_original * 2)
+    torch.testing.assert_close(mlp.down_proj.weight[:, 0], down_original * 2)
+
+
+def test_reset_restores_all_projections(runtime):
+    mlp = runtime.model.model.layers[0].mlp
+    up_original = mlp.up_proj.weight[0].detach().clone()
+    gate_original = mlp.gate_proj.weight[0].detach().clone()
+    down_original = mlp.down_proj.weight[:, 0].detach().clone()
+
+    runtime.apply_plan(NeuronPlan.from_text("L1 N0 -0.5"), target="all")
+    restored = runtime.reset_edits()
+
+    assert restored == 3
+    torch.testing.assert_close(mlp.up_proj.weight[0], up_original)
+    torch.testing.assert_close(mlp.gate_proj.weight[0], gate_original)
+    torch.testing.assert_close(mlp.down_proj.weight[:, 0], down_original)
+
+
+def test_unknown_target_is_rejected(runtime):
+    with pytest.raises(ModelRuntimeError):
+        runtime.validate_plan(NeuronPlan.from_text("L1 N0 +1"), target="mlp")
+

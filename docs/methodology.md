@@ -56,9 +56,10 @@ Identity operator:
 Custom operator:
 
 - The user supplies exact `L<layer> N<neuron> <delta>` entries.
-- The tool multiplies the corresponding `down_proj` column by
-  `clamp(1 + delta, 0, max_scale)`. A delta of `-1` deletes the neuron's
-  contribution; `+1` doubles it.
+- The tool multiplies the matching MLP projection vector by
+  `clamp(1 + delta, 0, max_scale)`. `--target` selects `down_proj` (default),
+  `up_proj`, `gate_proj`, or `all`.
+- A delta of `-1` deletes the neuron's contribution; `+1` doubles it.
 - The editor supports adding, updating, removing, and clearing entries before
   the plan is applied. Applying a new plan starts from the original weights, so
   entries are absolute rather than cumulative.

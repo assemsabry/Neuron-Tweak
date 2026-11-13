@@ -10,7 +10,7 @@ from rich.console import Console
 from . import __version__
 from .banner import print_banner
 from .custom import render_plan, run_custom_pipeline
-from .model import ModelRuntime, ModelRuntimeError
+from .model import TARGETS, ModelRuntime, ModelRuntimeError
 from .neurons import NeuronPlan, NeuronSpecError
 from .system import detect_backend
 
@@ -77,6 +77,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=10.0,
         help="Maximum multiplicative scale for a custom edit (default: 10).",
+    )
+    parser.add_argument(
+        "--target",
+        choices=TARGETS,
+        default="down_proj",
+        help=(
+            "MLP projection to edit: down_proj (default), up_proj, gate_proj, "
+            "or all."
+        ),
     )
     parser.add_argument(
         "--save-directory",
@@ -176,8 +185,10 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
 
     if args.dry_run:
         console.print()
-        console.print("[bold]Parsed custom neuron plan[/]")
-        render_plan(console, plan)
+        console.print(
+            f"[bold]Parsed custom neuron plan[/] (target: {args.target})"
+        )
+        render_plan(console, plan, args.target)
         if not plan:
             console.print(
                 "[yellow]No edits were parsed. Pass --custom or --custom-file.[/]"
@@ -185,6 +196,7 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
         return
 
     console.print()
+    console.print(f"Target projection: [bold]{args.target}[/]")
     console.print("[bold]Loading model...[/]")
     runtime = ModelRuntime(
         model,
@@ -204,6 +216,7 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
             runtime,
             plan,
             console,
+            target=args.target,
             save_directory=args.save_directory,
             interactive=interactive,
         )

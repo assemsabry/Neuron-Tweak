@@ -51,6 +51,29 @@ scale = clamp(1 + delta, 0, max_scale)
 Column scaling is deliberately simple: it changes the strength of the neuron's
 output without touching the up or gate projections, and it is reversible.
 
+## Target projection
+
+`--target` selects which MLP projection is edited:
+
+| Target | What is scaled | Shape |
+|--------|----------------|-------|
+| `down_proj` (default) | Column `i` | `(hidden, intermediate)` |
+| `up_proj` | Row `i` | `(intermediate, hidden)` |
+| `gate_proj` | Row `i` | `(intermediate, hidden)` |
+| `all` | Row `i` of up and gate, column `i` of down | all three |
+
+- `down_proj` changes the neuron's output contribution.
+- `up_proj` changes the neuron's input projection.
+- `gate_proj` changes the neuron's gating.
+- `all` removes or amplifies the neuron at every stage of the MLP.
+
+For example, this deletes neuron 8949 in layer 14 from all three projections:
+
+```bash
+neuron-tweak <model> --profile custom \
+  --custom "L14 N8949 -1" --target all --save-directory ./out
+```
+
 ## Interactive editor
 
 ```bash

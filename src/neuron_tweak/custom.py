@@ -20,13 +20,15 @@ if TYPE_CHECKING:
     from .model import AppliedEdit, ModelRuntime
 
 
-def render_plan(console: "Console", plan: NeuronPlan) -> None:
+def render_plan(
+    console: "Console", plan: NeuronPlan, target: str = "down_proj"
+) -> None:
     """Print the current custom edit plan as a table."""
     if not plan:
         console.print("[dim]The neuron edit plan is empty.[/]")
         return
 
-    table = Table(title="Neuron edit plan", show_lines=False)
+    table = Table(title=f"Neuron edit plan (target: {target})", show_lines=False)
     table.add_column("#", justify="right", style="dim")
     table.add_column("Neuron", style="cyan")
     table.add_column("Delta", justify="right")
@@ -50,14 +52,16 @@ def render_applied(console: "Console", results: list["AppliedEdit"]) -> None:
     """Print the edits that were applied to the model."""
     table = Table(title="Applied neuron edits")
     table.add_column("Neuron", style="cyan")
+    table.add_column("Projection")
     table.add_column("Scale", justify="right")
     table.add_column("Effect")
-    table.add_column("Column norm", justify="right")
+    table.add_column("Vector norm", justify="right")
 
     for result in results:
         edit = result.edit
         table.add_row(
             f"L{edit.layer} N{edit.neuron}",
+            result.projection,
             f"x{edit.scale:.2f}",
             edit.effect,
             f"{result.original_norm:.4f} -> {result.new_norm:.4f}",
@@ -65,13 +69,15 @@ def render_applied(console: "Console", results: list["AppliedEdit"]) -> None:
     console.print(table)
 
 
-def edit_plan_interactive(console: "Console", plan: NeuronPlan) -> None:
+def edit_plan_interactive(
+    console: "Console", plan: NeuronPlan, target: str = "down_proj"
+) -> None:
     """Run the add/remove/clear editor loop until the user chooses Done."""
     import questionary
 
     while True:
         console.print()
-        render_plan(console, plan)
+        render_plan(console, plan, target)
         action = questionary.select(
             "Custom Tweak editor",
             choices=[
@@ -147,6 +153,7 @@ def edit_plan_interactive(console: "Console", plan: NeuronPlan) -> None:
                 "  +1 doubles the neuron, -1 deletes it, -0.5 halves it.\n"
                 "  delete is an alias for -1. reset removes the plan entry.\n"
                 "  Multiple entries may be separated by commas or semicolons.\n"
+                f"  Current target projection: {target}.\n"
             )
 
 
@@ -155,19 +162,21 @@ def run_custom_pipeline(
     plan: NeuronPlan,
     console: "Console",
     *,
+    target: str = "down_proj",
     save_directory: str | None = None,
     interactive: bool = True,
 ) -> None:
     """Edit the plan, apply it to the model, and optionally save the result."""
     if interactive:
-        edit_plan_interactive(console, plan)
+        edit_plan_interactive(console, plan, target)
 
     if not plan:
         console.print("[yellow]No neuron edits to apply. Exiting.[/]")
         return
 
     console.print()
-    render_plan(console, plan)
+    console.print(f"Target projection: [bold]{target}[/]")
+    render_plan(console, plan, target)
 
     if interactive:
         import questionary
@@ -180,7 +189,7 @@ def run_custom_pipeline(
             return
 
     try:
-        results = runtime.apply_plan(plan)
+        results = runtime.apply_plan(plan, target=target)
     except Exception as error:  # noqa: BLE001 - show a friendly editor error
         console.print(f"[red]Could not apply the plan: {error}[/]")
         return

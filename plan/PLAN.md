@@ -395,15 +395,16 @@ Interactive flow (mirrors Heretic):
 7. Action menu: save / upload / chat / benchmark / reproduce.
 
 Custom Tweak bypasses steps 4-6: after model loading it opens an editor where
-the user adds, updates, or removes L/N/delta entries, applies them to the MLP
-down-projection columns, and saves the edited model.
+the user adds, updates, or removes L/N/delta entries, applies them to the
+selected MLP projection (`down_proj` by default, or `up_proj`, `gate_proj`, or
+`all`), and saves the edited model.
 
 Non-interactive flags (for scripting, mirroring Heretic's settings):
 
 - --profile, --n-trials, --trial-index, --save-directory, --model-action,
   --evaluate-model, --checkpoint-action, --export-strategy
-- Custom Tweak: --custom, --custom-file, --max-scale, --interactive, --dry-run,
-  --dtype, --device-map, --quantization, --trust-remote-code
+- Custom Tweak: --custom, --custom-file, --max-scale, --target, --interactive,
+  --dry-run, --dtype, --device-map, --quantization, --trust-remote-code
 
 ## 5. Configuration Philosophy
 
@@ -427,8 +428,8 @@ Default objectives (co-optimized, Pareto):
 - Safety profile: minimize RefusalRate (keyword or classifier), minimize KL divergence.
 - Identity profile: maximize IdentityMatch (or minimize IdentityMismatch),
   minimize KL divergence.
-- Custom profile: no objective. The user supplies exact L/N/delta edits and
-  decides when the plan is complete.
+- Custom profile: no objective. The user supplies exact L/N/delta edits, picks
+  the target projection, and decides when the plan is complete.
 - Optional: minimize BenchmarkPenalty (e.g., PIQA accuracy drop).
 
 The optimizer's search space (per profile):
@@ -626,13 +627,14 @@ Completed:
 - `src/neuron_tweak/neurons.py`: L/N/delta parsing, add/update/remove plans,
   scale clamping, and validation.
 - `src/neuron_tweak/model.py`: local model loading with dtype fallback,
-  accelerator device map, MLP down-projection editing, reset, and saving.
+  accelerator device map, MLP up/gate/down projection editing, reset, and
+  saving.
 - `src/neuron_tweak/custom.py`: interactive Custom Tweak editor and
   non-interactive apply/save pipeline.
 - `src/neuron_tweak/system.py`: CUDA/ROCm/MPS/CPU backend detection.
 - `src/neuron_tweak/main.py`: CLI with Safety Tweak, Identity Tweak, and
-  Custom Tweak, including `--custom`, `--custom-file`, `--dry-run`, and
-  `--save-directory`.
+  Custom Tweak, including `--custom`, `--custom-file`, `--target`,
+  `--dry-run`, and `--save-directory`.
 - `src/neuron_tweak/prompts.py`: prompt loading, placeholder expansion, and
   train/evaluation split.
 - `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (51 tests

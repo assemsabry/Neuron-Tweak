@@ -1,13 +1,20 @@
 """Model loading, MLP neuron editing, and saving.
 
-The Custom Tweak workflow edits the down-projection matrix of selected MLP
-neurons. For a Llama-style block:
+Custom Tweak edits one or more MLP projections of selected neurons. For a
+Llama-style block:
 
-    down_proj.weight.shape == (hidden_size, intermediate_size)
+    up_proj.weight:    (intermediate_size, hidden_size)
+    gate_proj.weight:  (intermediate_size, hidden_size)
+    down_proj.weight:  (hidden_size, intermediate_size)
 
-Column ``i`` maps MLP neuron ``i`` back to the hidden dimension. Multiplying
-that column by a scale changes the neuron's contribution to the residual
-stream. A scale of zero removes the neuron's contribution entirely.
+Rows of ``up_proj`` and ``gate_proj`` correspond to MLP neurons. Column ``i``
+of ``down_proj`` maps neuron ``i`` back to the hidden dimension. Scaling the
+matching rows and column changes the neuron's contribution to the residual
+stream. A scale of zero removes the neuron's contribution.
+
+The default target is ``down_proj`` because its column is the neuron's output
+path. ``up_proj``, ``gate_proj``, and ``all`` are also available for full
+control over the MLP.
 """
 
 from __future__ import annotations
@@ -18,6 +25,9 @@ from pathlib import Path
 from typing import Any
 
 from .neurons import NeuronEdit, NeuronPlan
+
+PROJECTIONS = ("up_proj", "gate_proj", "down_proj")
+TARGETS = ("down_proj", "up_proj", "gate_proj", "all")
 
 
 class ModelRuntimeError(RuntimeError):
@@ -48,9 +58,10 @@ class ModelInfo:
 
 @dataclass(frozen=True)
 class AppliedEdit:
-    """The result of applying one neuron edit."""
+    """The result of applying one neuron edit to one projection."""
 
     edit: NeuronEdit
+    projection: str
     original_norm: float
     new_norm: float
 
@@ -76,7 +87,7 @@ class ModelRuntime:
         self.model: Any | None = None
         self.tokenizer: Any | None = None
         self._layers: list[Any] = []
-        self._originals: dict[tuple[int, int], Any] = {}
+        self._originals: dict[tuple[str, int, int], Any] = {}
         self._torch: Any | None = None
 
     @property
@@ -175,11 +186,12 @@ class ModelRuntime:
             device=str(parameter.device),
         )
 
-    def validate_plan(self, plan: NeuronPlan) -> None:
+    def validate_plan(self, plan: NeuronPlan, target: str = "down_proj") -> None:
         """Raise a single error listing every invalid plan entry."""
         if not self.is_loaded:
             raise ModelRuntimeError("Model is not loaded")
 
+        projections = self._target_projections(target)
         problems: list[str] = []
         for edit in plan:
             if edit.layer < 1 or edit.layer > len(self._layers):
@@ -188,71 +200,84 @@ class ModelRuntime:
                     f"{len(self._layers)}"
                 )
                 continue
-            weight = self.down_proj_weight(edit.layer)
-            intermediate_size = int(weight.shape[1])
-            if edit.neuron >= intermediate_size:
-                problems.append(
-                    f"L{edit.layer} N{edit.neuron}: neuron must be between 0 and "
-                    f"{intermediate_size - 1}"
-                )
+            for projection in projections:
+                try:
+                    weight = self.projection_weight(edit.layer, projection)
+                except ModelRuntimeError as error:
+                    problems.append(f"L{edit.layer} N{edit.neuron}: {error}")
+                    continue
+                size = self._neuron_dimension(weight, projection)
+                if edit.neuron >= size:
+                    problems.append(
+                        f"L{edit.layer} N{edit.neuron} ({projection}): neuron must "
+                        f"be between 0 and {size - 1}"
+                    )
         if problems:
             raise ModelRuntimeError("Invalid neuron edits:\n" + "\n".join(problems))
 
-    def apply_plan(self, plan: NeuronPlan) -> list[AppliedEdit]:
+    def apply_plan(
+        self, plan: NeuronPlan, target: str = "down_proj"
+    ) -> list[AppliedEdit]:
         """Apply a plan from the original weights, replacing any previous edits."""
         if not self.is_loaded:
             raise ModelRuntimeError("Model is not loaded")
         if self._torch is None:
             raise ModelRuntimeError("Torch runtime is not initialized")
 
-        self.validate_plan(plan)
+        self.validate_plan(plan, target)
         self.reset_edits()
 
         results: list[AppliedEdit] = []
         try:
             for edit in plan:
-                weight = self.down_proj_weight(edit.layer)
-                column = weight[:, edit.neuron]
-                original = column.detach().clone()
-                scale = edit.scale
-                original_norm = float(original.float().norm().item())
+                for projection in self._target_projections(target):
+                    weight = self.projection_weight(edit.layer, projection)
+                    vector = self._vector_view(weight, projection, edit.neuron)
+                    original = vector.detach().clone()
+                    scale = edit.scale
+                    original_norm = float(original.float().norm().item())
 
-                if scale == 1.0:
+                    if scale == 1.0:
+                        results.append(
+                            AppliedEdit(
+                                edit=edit,
+                                projection=projection,
+                                original_norm=original_norm,
+                                new_norm=original_norm,
+                            )
+                        )
+                        continue
+
+                    new_vector = original * scale
+                    with self._torch.no_grad():
+                        vector.copy_(new_vector)
+
+                    self._originals[
+                        (projection, edit.layer, edit.neuron)
+                    ] = original
                     results.append(
                         AppliedEdit(
                             edit=edit,
+                            projection=projection,
                             original_norm=original_norm,
-                            new_norm=original_norm,
+                            new_norm=float(new_vector.float().norm().item()),
                         )
                     )
-                    continue
-
-                new_column = original * scale
-                with self._torch.no_grad():
-                    column.copy_(new_column)
-
-                self._originals[edit.key] = original
-                results.append(
-                    AppliedEdit(
-                        edit=edit,
-                        original_norm=original_norm,
-                        new_norm=float(new_column.float().norm().item()),
-                    )
-                )
         except Exception:
             self.reset_edits()
             raise
         return results
 
     def reset_edits(self) -> int:
-        """Restore every edited down_proj column to its original values."""
+        """Restore every edited projection vector to its original values."""
         if self._torch is None:
             return 0
         restored = 0
-        for (layer, neuron), original in list(self._originals.items()):
-            weight = self.down_proj_weight(layer)
+        for (projection, layer, neuron), original in list(self._originals.items()):
+            weight = self.projection_weight(layer, projection)
+            vector = self._vector_view(weight, projection, neuron)
             with self._torch.no_grad():
-                weight[:, neuron].copy_(original)
+                vector.copy_(original)
             restored += 1
         self._originals.clear()
         return restored
@@ -286,6 +311,46 @@ class ModelRuntime:
             except Exception:  # noqa: BLE001 - cleanup must not fail the process
                 pass
 
+    def down_proj_weight(self, layer_number: int) -> Any:
+        """Return the down-projection weight matrix for a 1-based layer."""
+        return self.projection_weight(layer_number, "down_proj")
+
+    def projection_weight(self, layer_number: int, projection: str) -> Any:
+        """Return an MLP projection weight matrix for a 1-based layer."""
+        mlp = self._mlp(layer_number)
+
+        if projection == "down_proj":
+            candidates = ("down_proj", "dense_4h_to_h")
+        elif projection == "up_proj":
+            candidates = ("up_proj",)
+        elif projection == "gate_proj":
+            candidates = ("gate_proj",)
+        else:
+            raise ModelRuntimeError(
+                f"Unknown projection {projection!r}; expected one of {PROJECTIONS}"
+            )
+
+        module = None
+        for attribute in candidates:
+            module = getattr(mlp, attribute, None)
+            if module is not None:
+                break
+        if module is None:
+            if projection == "down_proj" and hasattr(mlp, "c_proj"):
+                raise ModelRuntimeError(
+                    "GPT-2-style Conv1D MLPs are not supported by Custom Tweak yet"
+                )
+            raise ModelRuntimeError(
+                f"Layer {layer_number} has no recognized {projection} module"
+            )
+
+        weight = getattr(module, "weight", None)
+        if weight is None or getattr(weight, "ndim", 0) != 2:
+            raise ModelRuntimeError(
+                f"Layer {layer_number} {projection} weight is not a matrix"
+            )
+        return weight
+
     def _resolve_layers(self) -> list[Any]:
         candidates = (
             ("model", "layers"),
@@ -313,39 +378,33 @@ class ModelRuntime:
             )
         return self._layers[layer_number - 1]
 
-    def down_proj_weight(self, layer_number: int) -> Any:
-        """Return the down-projection weight matrix for a 1-based layer."""
+    def _mlp(self, layer_number: int) -> Any:
         layer = self._layer(layer_number)
-        mlp = None
         for attribute in ("mlp", "feed_forward", "ffn"):
             mlp = getattr(layer, attribute, None)
             if mlp is not None:
-                break
-        if mlp is None:
-            raise ModelRuntimeError(
-                f"Layer {layer_number} has no recognized MLP module"
-            )
+                return mlp
+        raise ModelRuntimeError(f"Layer {layer_number} has no recognized MLP module")
 
-        down_proj = None
-        for attribute in ("down_proj", "dense_4h_to_h"):
-            down_proj = getattr(mlp, attribute, None)
-            if down_proj is not None:
-                break
-        if down_proj is None:
-            if hasattr(mlp, "c_proj"):
-                raise ModelRuntimeError(
-                    "GPT-2-style Conv1D MLPs are not supported by Custom Tweak yet"
-                )
+    @staticmethod
+    def _target_projections(target: str) -> tuple[str, ...]:
+        if target == "all":
+            return PROJECTIONS
+        if target not in PROJECTIONS:
             raise ModelRuntimeError(
-                f"Layer {layer_number} has no recognized down-projection module"
+                f"Unknown target {target!r}; expected one of {TARGETS}"
             )
+        return (target,)
 
-        weight = getattr(down_proj, "weight", None)
-        if weight is None or getattr(weight, "ndim", 0) != 2:
-            raise ModelRuntimeError(
-                f"Layer {layer_number} down-projection weight is not a matrix"
-            )
-        return weight
+    @staticmethod
+    def _neuron_dimension(weight: Any, projection: str) -> int:
+        return int(weight.shape[1] if projection == "down_proj" else weight.shape[0])
+
+    @staticmethod
+    def _vector_view(weight: Any, projection: str, neuron: int) -> Any:
+        if projection == "down_proj":
+            return weight[:, neuron]
+        return weight[neuron, :]
 
     def _dtype_candidates(self) -> list[str]:
         if self.dtype != "auto":

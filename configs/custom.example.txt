@@ -5,6 +5,7 @@
 #
 # Use with:
 #   neuron-tweak <model> --profile custom --custom-file configs/custom.example.txt
+# Add --target down_proj (default), up_proj, gate_proj, or all.
 
 L14 N8949 +1
 L13 N7956 -1
