@@ -1,35 +1,10 @@
 import pytest
 
 torch = pytest.importorskip("torch")
-transformers = pytest.importorskip("transformers")
+pytest.importorskip("transformers")
 
-from neuron_tweak.model import ModelRuntime, ModelRuntimeError
+from neuron_tweak.model import ModelRuntimeError
 from neuron_tweak.neurons import NeuronPlan
-
-
-@pytest.fixture(scope="module")
-def tiny_model_dir(tmp_path_factory):
-    path = tmp_path_factory.mktemp("tiny-llama")
-    config = transformers.LlamaConfig(
-        vocab_size=128,
-        hidden_size=16,
-        intermediate_size=32,
-        num_hidden_layers=2,
-        num_attention_heads=2,
-        num_key_value_heads=2,
-        max_position_embeddings=64,
-    )
-    model = transformers.LlamaForCausalLM(config)
-    model.save_pretrained(path)
-    return path
-
-
-@pytest.fixture
-def runtime(tiny_model_dir):
-    runtime = ModelRuntime(str(tiny_model_dir), dtype="float32", device_map="cpu")
-    runtime.load()
-    yield runtime
-    runtime.close()
 
 
 def test_model_info(runtime):

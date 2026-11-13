@@ -8,10 +8,12 @@ from pathlib import Path
 from rich.console import Console
 
 from . import __version__
+from .analysis import AnalysisError
 from .banner import print_banner
 from .custom import render_plan, run_custom_pipeline
 from .model import TARGETS, ModelRuntime, ModelRuntimeError
 from .neurons import NeuronPlan, NeuronSpecError
+from .safety import run_safety_pipeline
 from .system import detect_backend
 
 _PROFILES = {
@@ -88,6 +90,67 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--evaluation-size",
+        type=int,
+        default=100,
+        help="Held-out prompts per class for Safety/Identity (default: 100).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Shuffle seed for the prompt split (default: 0).",
+    )
+    parser.add_argument(
+        "--analysis-batch-size",
+        type=int,
+        default=8,
+        help="Batch size for activation capture (default: 8).",
+    )
+    parser.add_argument(
+        "--analysis-prompts",
+        type=int,
+        default=0,
+        help=(
+            "Limit training prompts per class for a quick analysis "
+            "(default: 0, use every training prompt)."
+        ),
+    )
+    parser.add_argument(
+        "--max-sequence-length",
+        type=int,
+        default=512,
+        help="Maximum tokens per analysis prompt (default: 512).",
+    )
+    parser.add_argument(
+        "--top-neurons",
+        type=int,
+        default=10,
+        help="Neurons to select per layer for Safety/Identity (default: 10).",
+    )
+    parser.add_argument(
+        "--min-score",
+        type=float,
+        default=0.0,
+        help="Minimum Cohen's d for a selected neuron (default: 0).",
+    )
+    parser.add_argument(
+        "--neuron-delta",
+        type=float,
+        default=-1.0,
+        help="Delta applied to selected Safety/Identity neurons (default: -1).",
+    )
+    parser.add_argument(
+        "--layers",
+        default="all",
+        help="Layers to analyze, for example 'all', '10-20', or '14,15'.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Apply Safety/Identity edits without a confirmation prompt.",
+    )
+    parser.add_argument(
         "--save-directory",
         "-o",
         metavar="PATH",
@@ -101,7 +164,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Parse and print the custom plan without loading the model.",
+        help=(
+            "Custom: parse and print the plan without loading the model. "
+            "Safety/Identity: analyze and print the plan without changing weights."
+        ),
     )
     parser.add_argument(
         "--dtype",
@@ -226,6 +292,42 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
         runtime.close()
 
 
+def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
+    for flag, value in (
+        ("--max-scale", args.max_scale),
+        ("--top-neurons", args.top_neurons),
+        ("--analysis-batch-size", args.analysis_batch_size),
+        ("--max-sequence-length", args.max_sequence_length),
+        ("--evaluation-size", args.evaluation_size),
+    ):
+        if value <= 0:
+            console.print(f"[red]{flag} must be greater than zero.[/]")
+            return
+    if args.analysis_prompts < 0:
+        console.print("[red]--analysis-prompts cannot be negative.[/]")
+        return
+
+    console.print("[bold]Loading model...[/]")
+    runtime = ModelRuntime(
+        model,
+        dtype=args.dtype,
+        device_map=args.device_map,
+        quantization=args.quantization,
+        trust_remote_code=args.trust_remote_code,
+    )
+    try:
+        info = runtime.load()
+        console.print()
+        for line in info.lines():
+            console.print(f"* {line}")
+        console.print()
+        run_safety_pipeline(runtime, console, args)
+    except (ModelRuntimeError, AnalysisError, NeuronSpecError) as error:
+        console.print(f"[red]{error}[/]")
+    finally:
+        runtime.close()
+
+
 def run() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -238,10 +340,11 @@ def run() -> None:
     )
     console.print()
 
+    custom_dry_run = args.profile == "custom" and args.dry_run
     model = args.model
-    if model is None and not args.dry_run:
+    if model is None and not custom_dry_run:
         model = ask_model(console)
-    if model is None and not args.dry_run:
+    if model is None and not custom_dry_run:
         console.print("[red]No model selected. Exiting.[/]")
         return
 
@@ -265,12 +368,14 @@ def run() -> None:
     if profile == "custom":
         run_custom(args, model or "", console)
         return
+    if profile == "safety":
+        run_safety(args, model or "", console)
+        return
 
     console.print(
-        f"[yellow]{_PROFILES[profile]} requires the activation-analysis "
-        "pipeline, which is not implemented yet.[/] "
-        "Custom Tweak is fully implemented; choose it to edit or delete "
-        "specific neurons by name."
+        "[yellow]Identity Tweak requires the identity activation pipeline, "
+        "which is not implemented yet.[/] Safety Tweak and Custom Tweak are "
+        "available now."
     )
 
 

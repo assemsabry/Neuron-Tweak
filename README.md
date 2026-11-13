@@ -22,12 +22,17 @@ and targets individual neurons rather than only residual directions.
 
 ## Status
 
-Custom Tweak is implemented end to end: model loading, L/N/delta parsing,
-add/update/remove editing, direct MLP `down_proj` column scaling, reset, and
-model saving. Safety Tweak and Identity Tweak still require the
-activation-analysis and optimization pipeline. The repository also contains
-the startup banner, the workflow selection screen, the prompt loader, and the
-curated prompt datasets.
+Safety Tweak and Custom Tweak are implemented end to end.
+
+- Safety Tweak: loads the model, runs the 500 training good and 500 training
+  bad prompts through it, captures MLP neuron activations, scores every neuron
+  with Cohen's d, selects the top neurons per layer, and suppresses them with a
+  reversible edit. The 100 held-out prompts per class are split and reported;
+  automated before/after generation scoring is the next phase.
+- Custom Tweak: model loading, L/N/delta parsing, add/update/remove editing,
+  direct MLP projection scaling, reset, and model saving.
+- Identity Tweak still requires the identity activation and optimization
+  pipeline.
 
 ## Installation
 
@@ -72,6 +77,47 @@ neuron-tweak --profile custom --custom-file edits.txt --dry-run
 At startup the tool prints the Neuron Tweak banner and asks which neurons you
 want to modify. The banner color defaults to green and can be changed with the
 `NEURON_TWEAK_BANNER_COLOR` environment variable (any Rich color name).
+
+## Safety Tweak
+
+Safety Tweak compares the model's MLP activations on refusal-triggering
+prompts with its activations on harmless prompts, then suppresses the neurons
+that are most differentially active.
+
+```bash
+# Analyze and print the selected neurons without changing weights.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety --dry-run
+
+# Apply the default plan and save the edited model.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety \
+  --save-directory ./qwen-safety
+
+# Quick analysis with fewer prompts.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety \
+  --analysis-prompts 50 --dry-run
+
+# Analyze only the middle layers and select 5 neurons per layer.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety \
+  --layers 10-20 --top-neurons 5 --save-directory ./qwen-safety
+```
+
+Defaults:
+
+- 500 training prompts per class from the 600-prompt datasets, with 100
+  held-out prompts per class.
+- Top 10 neurons per layer.
+- `down_proj` target and a delta of `-1` (delete the selected column).
+- Batch size 8 and maximum sequence length 512.
+
+Useful flags: `--analysis-batch-size`, `--analysis-prompts`,
+`--max-sequence-length`, `--top-neurons`, `--min-score`, `--layers`,
+`--neuron-delta`, `--target`, `--evaluation-size`, `--seed`, `--yes`,
+`--dry-run`, and `--save-directory`.
+
+The score is Cohen's d: `(mean_bad - mean_good) / pooled_std`. Positive scores
+mean the neuron is more active on refusal-triggering prompts. The plan is
+applied from the original weights, so running Safety Tweak again replaces the
+previous plan rather than stacking edits.
 
 ## Custom Tweak syntax
 

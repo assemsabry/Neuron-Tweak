@@ -55,6 +55,26 @@ working directory takes precedence, or use `--config path/to/file.toml`.
 | `product_line` | Target product line or model family. |
 | `assistant_persona` | Target assistant persona description. |
 
+## Safety Tweak options (command line)
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `--analysis-prompts` | `0` | Training prompts per class; `0` uses all 500. |
+| `--evaluation-size` | `100` | Held-out prompts per class. |
+| `--analysis-batch-size` | `8` | Prompts per forward pass. |
+| `--max-sequence-length` | `512` | Maximum tokens per prompt. |
+| `--top-neurons` | `10` | Neurons selected per layer. |
+| `--min-score` | `0.0` | Minimum Cohen's d. |
+| `--layers` | `all` | `all`, `14,15`, or `10-20`. |
+| `--neuron-delta` | `-1.0` | Delta written into the plan. |
+| `--seed` | `0` | Shuffle seed for the train/evaluation split. |
+| `--yes` | off | Skip the apply confirmation. |
+| `--dry-run` | off | Analyze and print, but do not change weights. |
+
+The shared `--target`, `--max-scale`, `--save-directory`, `--dtype`,
+`--device-map`, `--quantization`, and `--trust-remote-code` options also apply
+to Safety Tweak.
+
 ## Custom Tweak options (command line)
 
 Custom Tweak does not need a TOML section. Its plan is supplied through the

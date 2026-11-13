@@ -336,15 +336,16 @@ neuron-tweak/
     prompts.py                  (prompt loading, placeholder expansion, split)
     neurons.py                  (L/N/delta spec parsing and edit plans)
     custom.py                   (Custom Tweak editor and apply pipeline)
+    safety.py                   (Safety Tweak localization + suppression)
     config.py                   (pydantic settings from TOML)
-    model.py                    (loading, MLP editing, saving)
-    analysis.py                 (capture + neuron scoring)
-    optimizer.py                (Optuna study helpers)
-    evaluator.py                (scorer orchestration, objective values)
+    model.py                    (loading, MLP projection editing, saving)
+    analysis.py                 (activation capture + Cohen's d scoring)
+    optimizer.py                (Optuna study helpers, planned)
+    evaluator.py                (scorer orchestration, planned)
     plugin.py                   (plugin ABC + loader)
     modifier.py                 (Modifier ABC)
     scorer.py                   (Scorer ABC)
-    system.py                   (accelerator probe, batch-size auto-tune)
+    system.py                   (accelerator probe; batch-size auto-tune planned)
     utils.py
     modifiers/
       safety_neurons.py
@@ -606,13 +607,17 @@ Reference evaluations (run for every release):
 3. Create repository skeleton (Phase 0), including the startup banner and
    the workflow-selection prompt (done).
 4. Implement the Custom Tweak core: L/N/delta parsing, model loading, MLP
-   `down_proj` editing, reset, and saving (done).
-5. Decide the exact default datasets for the identity profile and finalize
+   projection editing, reset, and saving (done).
+5. Implement activation capture, Cohen's d neuron scoring, and the first
+   Safety Tweak localization/suppression pipeline (done).
+6. Add automated before/after refusal-rate evaluation on the held-out safety
+   prompts.
+7. Decide the exact default datasets for the identity profile and finalize
    the target-identity config schema.
-6. Implement activation capture, neuron scoring, and the Safety/Identity
-   optimization pipelines.
-7. Run a feasibility spike: activation capture + logit-lens on one model to
+8. Run a feasibility spike: activation capture + logit-lens on one model to
    confirm identity neurons are detectable and sparse.
+9. Add Optuna optimization and Pareto trial selection for Safety and
+   Identity.
 
 ## 15. Current Implementation Status (2026-11-13)
 
@@ -631,21 +636,29 @@ Completed:
   saving.
 - `src/neuron_tweak/custom.py`: interactive Custom Tweak editor and
   non-interactive apply/save pipeline.
+- `src/neuron_tweak/analysis.py`: down-projection activation capture and
+  Cohen's d neuron scoring.
+- `src/neuron_tweak/safety.py`: Safety Tweak localization, top-neuron
+  selection, suppression plan, apply, and save pipeline.
 - `src/neuron_tweak/system.py`: CUDA/ROCm/MPS/CPU backend detection.
 - `src/neuron_tweak/main.py`: CLI with Safety Tweak, Identity Tweak, and
   Custom Tweak, including `--custom`, `--custom-file`, `--target`,
-  `--dry-run`, and `--save-directory`.
+  `--layers`, `--top-neurons`, `--analysis-prompts`, `--dry-run`, and
+  `--save-directory`.
 - `src/neuron_tweak/prompts.py`: prompt loading, placeholder expansion, and
   train/evaluation split.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (51 tests
-  passing, including a tiny Llama editing integration test).
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (70 tests
+  passing, including tiny Llama editing and activation-capture integration
+  tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).
 
 Not yet implemented:
 
-- Activation capture and neuron scoring.
-- Safety Tweak and Identity Tweak optimization pipelines.
+- Identity Tweak activation, logit-lens, and causal-tracing pipeline.
+- Optuna optimization and Pareto trial selection.
+- Automated before/after refusal-rate evaluation on held-out prompts.
 - Batch-size auto-tuning and response generation.
 - Chat, benchmark, and upload actions.
+- Quantized-model editing (the current runtime requires full precision).

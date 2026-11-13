@@ -317,6 +317,16 @@ class ModelRuntime:
 
     def projection_weight(self, layer_number: int, projection: str) -> Any:
         """Return an MLP projection weight matrix for a 1-based layer."""
+        module = self.projection_module(layer_number, projection)
+        weight = getattr(module, "weight", None)
+        if weight is None or getattr(weight, "ndim", 0) != 2:
+            raise ModelRuntimeError(
+                f"Layer {layer_number} {projection} weight is not a matrix"
+            )
+        return weight
+
+    def projection_module(self, layer_number: int, projection: str) -> Any:
+        """Return an MLP projection module for a 1-based layer."""
         mlp = self._mlp(layer_number)
 
         if projection == "down_proj":
@@ -343,13 +353,7 @@ class ModelRuntime:
             raise ModelRuntimeError(
                 f"Layer {layer_number} has no recognized {projection} module"
             )
-
-        weight = getattr(module, "weight", None)
-        if weight is None or getattr(weight, "ndim", 0) != 2:
-            raise ModelRuntimeError(
-                f"Layer {layer_number} {projection} weight is not a matrix"
-            )
-        return weight
+        return module
 
     def _resolve_layers(self) -> list[Any]:
         candidates = (

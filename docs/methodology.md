@@ -6,48 +6,53 @@ pipeline has five stages.
 ## 1. Load and benchmark
 
 The model is loaded locally with transformers and accelerate. Supported dtypes
-are tried in order until one succeeds. Optional 4-bit quantization via
-bitsandbytes reduces VRAM use at a small accuracy cost. The batch size is
-chosen by measuring tokens per second across increasing batch sizes.
+are tried in order until one succeeds. The current neuron-editing runtime
+requires full-precision weights; 4-bit quantization is rejected for editing.
+Batch-size auto-tuning is not implemented yet; the analysis batch size is
+configurable with `--analysis-batch-size`.
 
 ## 2. Contrastive activation capture
 
-For every prompt in the good and bad sets, forward hooks record activations for
-the layers of interest. For each transformer block this includes the MLP
-up-projection, gate-projection, and down-projection outputs, and optionally the
-attention output projection. Activations are moved to CPU as soon as possible
-to limit peak VRAM use.
+For every prompt in the good and bad sets, forward pre-hooks on each
+`mlp.down_proj` record the neuron activations: the input to the down-projection
+has shape `(batch, sequence, intermediate_size)`, so each column is one MLP
+neuron. The current implementation accumulates the sum, sum of squares, and
+token count per neuron per selected layer on CPU to limit peak VRAM use.
+Attention, up-projection, and gate-projection capture are planned.
 
 ## 3. Neuron scoring and localization
 
 For each layer and each neuron, the engine computes a separation score between
-the bad and good activation distributions. The default scores are:
+the bad and good activation distributions.
 
-- Cohen's d between the means, with optional winsorization to limit the effect
-  of massive activations.
+Implemented:
+
+- Cohen's d between the means:
+  `(mean_bad - mean_good) / sqrt((var_good + var_bad) / 2 + eps)`.
+
+Planned:
+
+- Winsorization to limit the effect of massive activations.
 - A logistic-probe margin fitted on CPU.
 - For identity, a logit-lens projection of the neuron activation onto the
   unembedding directions of current-identity and target-identity tokens.
-
-Identity localization is validated with causal tracing: activations from a
-target-identity run are patched into a current-identity run, and the change in
-identity-token logits is measured. Only neurons with a positive causal effect
-are retained.
+- Causal tracing for identity: activations from a target-identity run are
+  patched into a current-identity run, and the change in identity-token logits
+  is measured.
 
 ## 4. Editing
 
-Safety and identity edits use different operators but share the same reversible
-LoRA machinery.
+Safety edits use direct, reversible projection scaling. Identity edits will use
+the same reversible machinery with a learned low-rank edit.
 
-Safety operators:
+Safety operator (implemented):
 
-- Downscale the incoming weights of selected neurons and the matching column of
-  the down-projection matrix.
-- Clamp the neuron's contribution to zero.
-- Shift the pre-activation with a negative bias where the architecture allows
-  it.
+- Scale the matching `down_proj` column by `clamp(1 + delta, 0, max_scale)`.
+  The default `delta = -1` removes the neuron's contribution.
+- With `--target up_proj`, `gate_proj`, or `all`, the matching rows are scaled
+  as well, removing the neuron from every stage of the MLP.
 
-Identity operator:
+Identity operator (planned):
 
 - Optimize a low-rank weight edit on the selected neurons so that target
   identity tokens become likely on identity prompts while unrelated factual
@@ -70,11 +75,15 @@ the original model exactly.
 
 ## 5. Optimization and selection
 
-An Optuna TPE study samples the editable parameters: layers, top-k neurons,
-scale or strength, LoRA rank, and operator. Each trial is scored by the
-configured scorers, and the Pareto front is presented in the terminal. The
-user chooses a trial, inspects its scores, and then saves, chats with,
-benchmarks, or uploads the resulting model.
+Current Safety Tweak: select the top `--top-neurons` per layer by Cohen's d and
+apply a fixed `--neuron-delta` to the chosen projection. This is a transparent
+first pass, not a tuned optimum.
+
+Planned: an Optuna TPE study that samples layers, top-k neurons, scale or
+strength, LoRA rank, and operator. Each trial is scored by the configured
+scorers, and the Pareto front is presented in the terminal. The user chooses a
+trial, inspects its scores, and then saves, chats with, benchmarks, or uploads
+the resulting model.
 
 ## Prompt counts
 
