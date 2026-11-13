@@ -274,11 +274,41 @@ def run_safety_study(
         f"{best.score:.4f}[/]"
     )
 
+    chosen = best
     if not getattr(args, "study_apply_best", False):
-        return best
+        if not sys.stdin.isatty():
+            return best
+        import questionary
 
-    top_k = int(best.params.get("top_k", 1))
-    delta = float(best.params.get("delta", -1.0))
+        choices = [
+            questionary.Choice(
+                title=(
+                    f"Best: trial {best.trial_number} "
+                    f"(top_k={best.params.get('top_k', 1)}, "
+                    f"delta={best.params.get('delta', -1.0):+.2f}, "
+                    f"score={best.score:.4f})"
+                ),
+                value=best,
+            )
+        ]
+        for result in ranked[:9]:
+            if result.trial_number == best.trial_number:
+                continue
+            choices.append(
+                questionary.Choice(
+                    title=f"Trial {result.trial_number} (score={result.score:.4f})",
+                    value=result,
+                )
+            )
+        chosen = questionary.select(
+            "Select a safety study trial to apply:",
+            choices=choices,
+        ).ask()
+        if chosen is None:
+            return best
+
+    top_k = int(chosen.params.get("top_k", 1))
+    delta = float(chosen.params.get("delta", -1.0))
     plan = plan_from_scores(selected[:top_k], delta=delta, max_scale=args.max_scale)
     console.print()
     render_plan(console, plan, args.target)
@@ -286,7 +316,7 @@ def run_safety_study(
         import questionary
 
         confirmed = questionary.confirm(
-            "Apply the best safety trial to the model?", default=True
+            f"Apply safety trial {chosen.trial_number} to the model?", default=True
         ).ask()
         if not confirmed:
             console.print("Edits were not applied.")
