@@ -53,6 +53,17 @@ Identity operator:
   identity tokens become likely on identity prompts while unrelated factual
   prompts remain close to the original model.
 
+Custom operator:
+
+- The user supplies exact `L<layer> N<neuron> <delta>` entries.
+- The tool multiplies the corresponding `down_proj` column by
+  `clamp(1 + delta, 0, max_scale)`. A delta of `-1` deletes the neuron's
+  contribution; `+1` doubles it.
+- The editor supports adding, updating, removing, and clearing entries before
+  the plan is applied. Applying a new plan starts from the original weights, so
+  entries are absolute rather than cumulative.
+- Custom Tweak uses no prompt dataset, scoring, or optimizer.
+
 Every edit is expressed relative to the frozen base weights, so reset restores
 the original model exactly.
 

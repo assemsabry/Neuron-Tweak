@@ -71,8 +71,8 @@ def check_file(relative_path: str, require_placeholder: bool) -> list[str]:
 
 def main() -> int:
     checks = [
-        ("refusal/good_prompts.txt", False),
-        ("refusal/bad_prompts.txt", False),
+        ("safety/good_prompts.txt", False),
+        ("safety/bad_prompts.txt", False),
         ("identity/good_prompts.txt", True),
         ("identity/bad_prompts.txt", False),
     ]

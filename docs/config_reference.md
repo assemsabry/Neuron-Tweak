@@ -1,14 +1,14 @@
 # Configuration reference
 
 Neuron Tweak loads `configs/default.toml` plus a workflow configuration such as
-`configs/refusal.toml` or `configs/identity.toml`. A local `config.toml` in the
+`configs/safety.toml` or `configs/identity.toml`. A local `config.toml` in the
 working directory takes precedence, or use `--config path/to/file.toml`.
 
 ## Top-level
 
 | Key | Type | Meaning |
 |-----|------|---------|
-| `profile` | `"refusal"` or `"identity"` | Workflow to run. |
+| `profile` | `"safety"`, `"identity"`, or `"custom"` | Workflow to run. |
 
 ## `[model]`
 
@@ -54,6 +54,22 @@ working directory takes precedence, or use `--config path/to/file.toml`.
 | `founder` | Target founder. |
 | `product_line` | Target product line or model family. |
 | `assistant_persona` | Target assistant persona description. |
+
+## Custom Tweak options (command line)
+
+Custom Tweak does not need a TOML section. Its plan is supplied through the
+command line or the interactive editor.
+
+| Option | Meaning |
+|--------|---------|
+| `--profile custom` | Select the Custom Tweak workflow. |
+| `--custom "L14 N8949 +1"` | Add one or more edits; repeatable and comma-friendly. |
+| `--custom-file PATH` | Read edits from a text file (`configs/custom.example.txt`). |
+| `--max-scale N` | Maximum multiplicative scale (default `10`). |
+| `--interactive` | Open the editor even when `--custom` entries are present. |
+| `--dry-run` | Parse and print the plan without loading the model. |
+| `--save-directory PATH` | Save the edited model after applying the plan. |
+| `--dtype`, `--device-map`, `--quantization` | Model loading controls. |
 
 ## Plugin sections
 

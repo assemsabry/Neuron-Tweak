@@ -1,7 +1,7 @@
 # Refusal workflow configuration.
-# Usage: neuron-tweak <model> --config configs/refusal.toml
+# Usage: neuron-tweak <model> --config configs/safety.toml
 
-profile = "refusal"
+profile = "safety"
 
 [prompts]
 data_dir = "data"

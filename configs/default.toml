@@ -1,8 +1,8 @@
 # Neuron Tweak shared defaults.
 # Copy this file to config.toml and edit it, or pass --config with a path.
-# Workflow-specific values live in configs/refusal.toml and configs/identity.toml.
+# Workflow-specific values live in configs/safety.toml and configs/identity.toml.
 
-profile = "refusal"
+profile = "safety"
 
 [model]
 # PyTorch dtypes to try when loading model tensors.

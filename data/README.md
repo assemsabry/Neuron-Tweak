@@ -5,7 +5,7 @@ prompts per set instead of 400. Each workflow has a "good" set and a "bad" set.
 
 ```
 data/
-  refusal/
+  safety/
     good_prompts.txt    600 harmless requests (desirable behavior)
     bad_prompts.txt     600 refusal-triggering requests (undesirable behavior)
   identity/
@@ -17,7 +17,7 @@ Every file is UTF-8 plain text with one prompt per line. Empty lines and lines
 starting with `#` are ignored by the loader. Each file contains exactly 600
 unique prompts.
 
-## Refusal workflow
+## Safety workflow
 
 - `bad_prompts.txt`: requests that commonly trigger safety refusals. These are
   request-level test queries, not operational instructions. They mirror the

@@ -1,0 +1,10 @@
+# Custom Tweak example plan.
+# Syntax: L<layer> N<neuron> <delta>
+# L is 1-based. N is 0-based. +1 doubles the neuron, -1 deletes it.
+# Multiple entries may be separated by commas or semicolons.
+#
+# Use with:
+#   neuron-tweak <model> --profile custom --custom-file configs/custom.example.txt
+
+L14 N8949 +1
+L13 N7956 -1

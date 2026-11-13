@@ -10,14 +10,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_DIR = REPO_ROOT / "data"
 
 PROFILE_FILES: dict[str, dict[str, Path]] = {
-    "refusal": {
-        "good": DEFAULT_DATA_DIR / "refusal" / "good_prompts.txt",
-        "bad": DEFAULT_DATA_DIR / "refusal" / "bad_prompts.txt",
+    "safety": {
+        "good": DEFAULT_DATA_DIR / "safety" / "good_prompts.txt",
+        "bad": DEFAULT_DATA_DIR / "safety" / "bad_prompts.txt",
     },
     "identity": {
         "good": DEFAULT_DATA_DIR / "identity" / "good_prompts.txt",
         "bad": DEFAULT_DATA_DIR / "identity" / "bad_prompts.txt",
     },
+}
+
+PROFILE_ALIASES: dict[str, str] = {
+    "refusal": "safety",
 }
 
 IDENTITY_PLACEHOLDERS: tuple[str, ...] = (
@@ -127,6 +131,8 @@ def load_workflow_prompts(
     Returns a tuple of (good_split, bad_split). Identity good prompts are
     expanded with identity_values before splitting.
     """
+    if profile not in PROFILE_FILES:
+        profile = PROFILE_ALIASES.get(profile, profile)
     if profile not in PROFILE_FILES:
         raise PromptDatasetError(
             f"Unknown profile {profile!r}; expected one of {sorted(PROFILE_FILES)}"

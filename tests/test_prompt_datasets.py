@@ -5,8 +5,8 @@ import pytest
 from neuron_tweak.prompts import DEFAULT_DATA_DIR, IDENTITY_PLACEHOLDERS, load_prompt_file
 
 PROMPT_FILES = {
-    "refusal/good": DEFAULT_DATA_DIR / "refusal" / "good_prompts.txt",
-    "refusal/bad": DEFAULT_DATA_DIR / "refusal" / "bad_prompts.txt",
+    "safety/good": DEFAULT_DATA_DIR / "safety" / "good_prompts.txt",
+    "safety/bad": DEFAULT_DATA_DIR / "safety" / "bad_prompts.txt",
     "identity/good": DEFAULT_DATA_DIR / "identity" / "good_prompts.txt",
     "identity/bad": DEFAULT_DATA_DIR / "identity" / "bad_prompts.txt",
 }
