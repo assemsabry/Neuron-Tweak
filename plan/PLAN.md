@@ -617,7 +617,8 @@ Reference evaluations (run for every release):
 8. Run a feasibility spike: activation capture + logit-lens on one model to
    confirm identity neurons are detectable and sparse.
 9. Add Optuna optimization and Pareto trial selection for Safety and
-   Identity (Safety v1 currently uses fixed top-k suppression).
+   Identity (Safety v1 now runs the Optuna study via `--study`; full Pareto
+   selection remains pending).
 
 ## 15. Current Implementation Status (2026-11-13)
 
@@ -643,6 +644,8 @@ Completed:
 - `src/neuron_tweak/evaluator.py`: greedy response generation and refusal-rate
   evaluation.
 - `src/neuron_tweak/scorer.py`: scorer base class and refusal-rate scorer.
+- `src/neuron_tweak/optimizer.py`: Optuna neuron study helpers and the
+  Safety Optuna objective.
 - `src/neuron_tweak/system.py`: CUDA/ROCm/MPS/CPU backend detection.
 - `src/neuron_tweak/main.py`: CLI with Safety Tweak, Identity Tweak, and
   Custom Tweak, including `--custom`, `--custom-file`, `--target`,
@@ -650,9 +653,9 @@ Completed:
   and `--save-directory`.
 - `src/neuron_tweak/prompts.py`: prompt loading, placeholder expansion, and
   train/evaluation split.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (73 tests
-  passing, including tiny Llama editing, activation-capture, and generation
-  integration tests).
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (76 tests
+  passing, including tiny Llama editing, activation-capture, generation, and
+  Optuna study integration tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).

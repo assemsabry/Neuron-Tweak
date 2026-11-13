@@ -73,6 +73,11 @@ working directory takes precedence, or use `--config path/to/file.toml`.
 | `--evaluate` | off | Generate before/after responses and report the refusal rate. |
 | `--eval-max-new-tokens` | `64` | Max new tokens for evaluation responses. |
 | `--eval-batch-size` | `4` | Batch size for evaluation responses. |
+| `--study` | off | Run an Optuna study over the selected safety neurons. |
+| `--study-trials` | `30` | Number of Optuna trials for the safety study. |
+| `--study-startup-trials` | `10` | Startup trials for the Optuna safety study. |
+| `--study-direction` | `minimize` | Study direction: `minimize` or `maximize`. |
+| `--study-apply-best` | off | Apply the best safety study trial and save it. |
 | `--save-directory` | none | Directory for the edited model. |
 
 The shared `--target`, `--max-scale`, `--save-directory`, `--dtype`,

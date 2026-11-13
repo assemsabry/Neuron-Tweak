@@ -16,7 +16,7 @@ before/after generation scoring is a later phase.
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 from rich.progress import (
     BarColumn,
@@ -38,6 +38,7 @@ from .analysis import (
 )
 from .custom import render_applied, render_plan
 from .evaluator import evaluate_refusal_rate
+from .optimizer import NeuronStudy, TrialResult
 from .prompts import PromptDatasetError, load_workflow_prompts
 from .scorer import RefusalRateScorer
 
@@ -163,6 +164,146 @@ def _capture(
         )
 
 
+class SafetyNeuronObjective:
+    """Run one Optuna trial by varying top-k and the steering delta."""
+
+    def __init__(
+        self,
+        runtime: "ModelRuntime",
+        neurons: Sequence[NeuronScore],
+        heldout_bad_prompts: Sequence[str],
+        *,
+        scorer: RefusalRateScorer | None = None,
+        max_new_tokens: int = 64,
+        batch_size: int = 4,
+        max_length: int = 512,
+        target: str = "down_proj",
+        max_scale: float = 10.0,
+        tokenizer: Any | None = None,
+    ) -> None:
+        self.runtime = runtime
+        self.neurons = list(neurons)
+        self.heldout_bad_prompts = list(heldout_bad_prompts)
+        self.scorer = scorer or RefusalRateScorer()
+        self.tokenizer = tokenizer
+        self.max_new_tokens = max_new_tokens
+        self.batch_size = batch_size
+        self.max_length = max_length
+        self.target = target
+        self.max_scale = max_scale
+
+    def __call__(self, trial: Any) -> float:
+        if hasattr(trial, "params"):
+            params = trial.params or {}
+        else:
+            params = {}
+
+        top_k = int(params.get("top_k", 1))
+        delta = float(params.get("delta", -1.0))
+        if hasattr(trial, "suggest_int"):
+            top_k = int(trial.suggest_int("top_k", 1, max(1, len(self.neurons))))
+        if hasattr(trial, "suggest_float"):
+            delta = float(trial.suggest_float("delta", -1.0, 1.0))
+
+        selected = self.neurons[:top_k]
+        plan = plan_from_scores(selected, delta=delta, max_scale=self.max_scale)
+        self.runtime.apply_plan(plan, target=self.target)
+        return evaluate_refusal_rate(
+            self.runtime,
+            self.tokenizer,
+            self.heldout_bad_prompts,
+            self.scorer,
+            max_new_tokens=self.max_new_tokens,
+            batch_size=self.batch_size,
+            max_length=self.max_length,
+        )
+
+
+def run_safety_study(
+    runtime: "ModelRuntime",
+    console: "Console",
+    args: object,
+    scores: Sequence[Sequence[NeuronScore]],
+    selected: Sequence[NeuronScore],
+    heldout_bad_prompts: Sequence[str],
+    tokenizer: Any | None = None,
+) -> TrialResult | None:
+    """Run the Optuna safety study and optionally apply the best trial."""
+    from .optimizer import NeuronStudy
+
+    objective = SafetyNeuronObjective(
+        runtime,
+        selected,
+        heldout_bad_prompts,
+        max_new_tokens=args.eval_max_new_tokens,
+        batch_size=args.eval_batch_size,
+        max_length=args.max_sequence_length,
+        target=args.target,
+        max_scale=args.max_scale,
+        tokenizer=tokenizer,
+    )
+    study = NeuronStudy(
+        objective,
+        n_trials=args.study_trials,
+        n_startup_trials=args.study_startup_trials,
+        direction=args.study_direction,
+    )
+    console.print()
+    console.print(
+        f"[bold]Running safety Optuna study: {study.n_trials} trials[/]"
+    )
+    results = study.run()
+    ranked = sorted(results, key=lambda result: result.score)
+    best = ranked[0]
+
+    table = Table(title="Optuna safety study")
+    table.add_column("Trial", justify="right")
+    table.add_column("Top neurons", justify="right")
+    table.add_column("Delta", justify="right")
+    table.add_column("Score", justify="right")
+    for result in ranked:
+        table.add_row(
+            str(result.trial_number),
+            str(int(result.params.get("top_k", 1))),
+            f"{float(result.params.get('delta', -1.0)):+.2f}",
+            f"{result.score:.4f}",
+        )
+    console.print(table)
+    console.print(
+        f"[green]Best trial: {best.trial_number} with refusal rate "
+        f"{best.score:.4f}[/]"
+    )
+
+    if not getattr(args, "study_apply_best", False):
+        return best
+
+    top_k = int(best.params.get("top_k", 1))
+    delta = float(best.params.get("delta", -1.0))
+    plan = plan_from_scores(selected[:top_k], delta=delta, max_scale=args.max_scale)
+    console.print()
+    render_plan(console, plan, args.target)
+    if not args.yes and sys.stdin.isatty():
+        import questionary
+
+        confirmed = questionary.confirm(
+            "Apply the best safety trial to the model?", default=True
+        ).ask()
+        if not confirmed:
+            console.print("Edits were not applied.")
+            return
+    results_applied = runtime.apply_plan(plan, target=args.target)
+    console.print()
+    render_applied(console, results_applied)
+    if getattr(args, "save_directory", None):
+        target = runtime.save(args.save_directory)
+        console.print(f"[green]Saved edited model to {target}[/]")
+    else:
+        console.print(
+            "[yellow]The edit is applied in memory only. No model directory "
+            "was written.[/]"
+        )
+
+
 def run_safety_pipeline(
     runtime: "ModelRuntime",
     console: "Console",
@@ -227,6 +368,18 @@ def run_safety_pipeline(
         console.print(
             "[yellow]No neurons passed the score threshold. Nothing to "
             "edit.[/]"
+        )
+        return
+
+    if getattr(args, "study", False):
+        run_safety_study(
+            runtime,
+            console,
+            args,
+            scores,
+            selected,
+            bad_split.evaluation,
+            runtime.tokenizer,
         )
         return
 

@@ -94,6 +94,21 @@ rate (the fraction of responses containing a refusal marker) in both runs:
 neuron-tweak <model> --profile safety --evaluate --yes --save-directory ./out
 ```
 
+## Optuna study
+
+With `--study`, the tool runs an Optuna study over the selected safety neurons.
+
+- Each trial samples `top_k` (from 1 to the number of selected neurons) and a
+  steering `delta` (from -1 to 1).
+- The trial applies the corresponding plan and measures the held-out refusal
+  rate.
+- The best trial is reported, and `--study-apply-best` applies and saves it.
+
+```bash
+neuron-tweak <model> --profile safety \
+  --study --study-trials 30 --study-apply-best --save-directory ./out
+```
+
 ## What the edit changes
 
 Scaling the `down_proj` column by `1 + delta` changes the neuron's output

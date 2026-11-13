@@ -168,6 +168,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="Batch size for evaluation responses (default: 4).",
     )
     parser.add_argument(
+        "--study",
+        action="store_true",
+        help="Run an Optuna study over the selected safety neurons.",
+    )
+    parser.add_argument(
+        "--study-trials",
+        type=int,
+        default=30,
+        help="Number of Optuna trials for the safety study (default: 30).",
+    )
+    parser.add_argument(
+        "--study-startup-trials",
+        type=int,
+        default=10,
+        help="Startup trials for the Optuna safety study (default: 10).",
+    )
+    parser.add_argument(
+        "--study-direction",
+        choices=["minimize", "maximize"],
+        default="minimize",
+        help="Study direction for the safety Optuna study (default: minimize).",
+    )
+    parser.add_argument(
+        "--study-apply-best",
+        action="store_true",
+        help="Apply the best safety study trial and save it.",
+    )
+    parser.add_argument(
         "--save-directory",
         "-o",
         metavar="PATH",
@@ -331,6 +359,15 @@ def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
             if value <= 0:
                 console.print(f"[red]{flag} must be greater than zero.[/]")
                 return
+    if getattr(args, "study", False):
+        if args.study_trials <= 0:
+            console.print("[red]--study-trials must be greater than zero.[/]")
+            return
+        if args.study_startup_trials < 0:
+            console.print(
+                "[red]--study-startup-trials cannot be negative.[/]"
+            )
+            return
 
     console.print("[bold]Loading model...[/]")
     runtime = ModelRuntime(

@@ -124,6 +124,17 @@ With `--evaluate`, the tool generates responses for the held-out bad prompts
 before applying the plan and again after applying it, then reports the refusal
 rate (the fraction of responses containing a refusal marker) in both runs.
 
+With `--study`, the tool runs an Optuna study over the selected neurons. Each
+trial samples `top_k` and a steering `delta`, applies the resulting plan, and
+reports the held-out refusal rate. Use `--study-apply-best` to apply and save
+the best trial.
+
+```bash
+# Run a 30-trial Optuna study and apply the best trial.
+neuron-tweak <model> --profile safety \
+  --study --study-trials 30 --study-apply-best --save-directory ./out
+```
+
 ## Custom Tweak syntax
 
 ```
