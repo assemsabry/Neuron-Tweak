@@ -1,0 +1,31 @@
+# Neuron Tweak shared defaults.
+# Copy this file to config.toml and edit it, or pass --config with a path.
+# Workflow-specific values live in configs/refusal.toml and configs/identity.toml.
+
+profile = "refusal"
+
+[model]
+# PyTorch dtypes to try when loading model tensors.
+dtypes = ["auto", "float16", "bfloat16", "float32"]
+# "none" or "bnb_4bit".
+quantization = "none"
+device_map = "auto"
+max_batch_size = 128
+max_response_length = 100
+offload_outputs_to_cpu = true
+
+[prompts]
+data_dir = "data"
+# Number of prompts held out for evaluation in each good/bad set.
+evaluation_size = 100
+# Seed used to shuffle prompts before splitting. Set null to keep file order.
+split_seed = 0
+
+[optimization]
+n_trials = 100
+n_startup_trials = 30
+study_checkpoint_dir = "checkpoints"
+
+[export]
+max_shard_size = "5GB"
+modified_model_type = "tweaked"

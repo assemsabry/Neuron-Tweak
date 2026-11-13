@@ -1,0 +1,33 @@
+# Identity workflow configuration.
+# Usage: neuron-tweak <model> --config configs/identity.toml
+
+profile = "identity"
+
+[target_identity]
+model_name = "AcmeLM"
+vendor = "Acme Corporation"
+owner = "Acme Corporation"
+founder = "Jane Doe"
+product_line = "Acme Assist"
+assistant_persona = "Acme Assist, the official Acme assistant"
+
+[prompts]
+data_dir = "data"
+evaluation_size = 100
+split_seed = 0
+
+[modifier.IdentityNeurons]
+# LoRA rank used for the reversible identity edit.
+lora_rank = 8
+# Number of top-scoring neurons to consider per layer.
+top_k = 64
+# Ignore the original identity markers when measuring success.
+original_markers = []
+
+[scorer.IdentityMatch]
+score_name = "Identity match"
+optimization = "maximize"
+
+[scorer.KLDivergence]
+score_name = "KL divergence"
+optimization = "minimize"

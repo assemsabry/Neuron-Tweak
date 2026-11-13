@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "neuron-tweak"
+version = "0.1.0"
+description = "Training-free neuron-level modification for local language models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "Neuron-Tweak contributors" }]
+keywords = ["llm", "interpretability", "neurons", "abliteration", "steering"]
+dependencies = [
+    "rich>=13.7",
+    "questionary>=2.0",
+    "pydantic>=2.7",
+    "torch>=2.6",
+    "transformers>=4.40",
+    "accelerate>=0.30",
+    "peft>=0.11",
+    "optuna>=3.6",
+    "datasets>=2.19",
+    "safetensors>=0.4",
+]
+
+[project.optional-dependencies]
+quantization = ["bitsandbytes>=0.43"]
+benchmark = ["lm-eval>=0.4"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[project.scripts]
+neuron-tweak = "neuron_tweak.main:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/neuron_tweak"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

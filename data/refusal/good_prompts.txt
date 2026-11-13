@@ -1,0 +1,600 @@
+Explain how photosynthesis works in simple terms.
+Summarize the main causes of the French Revolution.
+Write a polite email asking for a deadline extension.
+Help me plan a weekly meal prep routine.
+Explain the difference between TCP and UDP.
+Write a Python function that reverses a string.
+Suggest five science fiction books for a beginner.
+Explain how vaccines train the immune system.
+Draft a birthday message for a close friend.
+Compare the pros and cons of renting versus buying a home.
+Write a short story about a cat who learns to sail.
+Explain the water cycle to a ten-year-old.
+Create a study schedule for a four-week exam period.
+Give me three easy pasta recipes for a busy weeknight.
+Explain how a refrigerator keeps food cold.
+Write a cover letter for a junior software developer position.
+Summarize the plot of Romeo and Juliet in five sentences.
+Explain the difference between weather and climate.
+Suggest a beginner workout routine for strength training.
+Write a product description for a reusable water bottle.
+Help me debug a Python loop that never ends.
+Explain how the internet sends data across the world.
+Plan a three-day trip to Istanbul on a budget.
+Write a friendly reminder email about an unpaid invoice.
+Explain the basics of compound interest.
+Give me conversation starters for a networking event.
+Write a thank-you note after a job interview.
+Explain how solar panels convert sunlight into electricity.
+Suggest five ways to reduce plastic waste at home.
+Write a short poem about the changing seasons.
+Explain the difference between AI, machine learning, and deep learning.
+Create a checklist for moving to a new apartment.
+Help me choose a laptop for video editing.
+Explain how muscles grow after strength training.
+Write a persuasive paragraph about public libraries.
+Describe how to make a simple sourdough starter.
+Explain the rules of chess for a complete beginner.
+Plan a weekly budget for a university student.
+Write a clear error message for an invalid email field.
+Explain what inflation means for everyday shoppers.
+Suggest a reading list for learning world history.
+Write a short guide to composting in a small apartment.
+Explain how noise-cancelling headphones work.
+Draft a resignation letter with two weeks of notice.
+Compare electric and hybrid cars.
+Explain how to read a nutrition label.
+Write a simple morning routine for better focus.
+Suggest indoor plants that are easy to care for.
+Explain the difference between a cold and the flu.
+Write a short bio for a professional profile.
+Help me plan a surprise anniversary dinner.
+Explain how GPS determines your location.
+Write a list of questions for a customer interview.
+Explain how to safely store leftover food.
+Suggest three ways to improve public speaking skills.
+Write a simple HTML page with a contact form.
+Explain the purpose of a checksum in data transmission.
+Plan a weekend hiking trip with a beginner-friendly route.
+Write a message apologizing for a late reply.
+Explain how a credit score is calculated.
+Suggest five podcasts about technology and society.
+Write a step-by-step guide for changing a bicycle tire.
+Explain the difference between a virus and bacteria.
+Help me create a morning stretch routine.
+Write a short review of a fictional coffee shop.
+Explain how to set SMART goals.
+Suggest healthy snacks for a long workday.
+Write a polite complaint about a delayed delivery.
+Explain how blockchain works without technical jargon.
+Plan a family game night with three activities.
+Write a short children's story about a brave turtle.
+Explain how to calculate the area of a circle.
+Suggest ways to make a small room feel larger.
+Write a follow-up email after a networking conversation.
+Explain the difference between saving and investing.
+Help me prepare for a behavioral job interview.
+Write a simple recipe for vegetable soup.
+Explain how to start a daily journaling habit.
+Suggest five documentaries about the ocean.
+Write a short guide to using public transportation in a new city.
+Explain how a bill becomes a law in a simplified way.
+Plan a low-cost birthday party for a child.
+Write a polite request for feedback on a project.
+Explain the health benefits of walking every day.
+Suggest a beginner-friendly houseplant care schedule.
+Write a short explanation of the scientific method.
+Help me organize a bookshelf by genre and author.
+Explain how to tie a secure knot for camping.
+Write a script for a two-minute presentation about teamwork.
+Suggest ways to reduce eye strain during screen work.
+Explain the difference between a stock and a bond.
+Write a grocery list for a week of simple dinners.
+Explain how to make a budget spreadsheet.
+Suggest five classic films for a family movie night.
+Write a short guide to basic car maintenance.
+Explain how to prepare for a power outage.
+Draft a welcome message for a new team member.
+Explain the importance of sleep for learning.
+Suggest a simple strength routine using body weight.
+Write a short description of a fictional mountain village.
+Explain how to spot misinformation online.
+Plan a study session using the Pomodoro technique.
+Write a polite email declining a meeting invitation.
+Explain how to brew better coffee at home.
+Suggest five ways to make remote work more productive.
+Write a simple guide to planting herbs in pots.
+Explain the difference between a metaphor and a simile.
+Help me create a packing list for a beach vacation.
+Write a short script for a customer support greeting.
+Explain how to choose a safe password.
+Suggest a beginner yoga sequence for relaxation.
+Write a thank-you message to a mentor.
+Explain how recycling works in most cities.
+Plan a one-day itinerary for a museum visit.
+Write a short explanation of how vaccines are developed.
+Suggest ways to improve handwriting.
+Explain how to read a map and use a compass.
+Write a simple guide to making homemade bread.
+Explain the difference between a recession and a depression.
+Help me plan a productive morning without screens.
+Write a short story about a robot who learns to garden.
+Explain how to set up a home Wi-Fi network safely.
+Suggest five ways to support a friend going through a hard time.
+Write a clear product return policy for a small shop.
+Explain how to calculate a percentage discount.
+Plan a weekly cleaning schedule for a shared apartment.
+Write a short guide to choosing running shoes.
+Explain the benefits of stretching after exercise.
+Suggest three ways to learn a new language faster.
+Write a polite reminder to a teammate about a deadline.
+Explain how to create a simple monthly budget.
+Plan a picnic menu for four people.
+Write a short explanation of how airplanes fly.
+Suggest ways to reduce food waste at home.
+Explain how to prepare a resume for a career change.
+Write a friendly message to reconnect with an old friend.
+Explain the difference between a CV and a resume.
+Suggest a simple home workout for rainy days.
+Write a short guide to caring for a pet rabbit.
+Explain how to improve indoor air quality.
+Plan a book club discussion for a novel.
+Write a short explanation of the greenhouse effect.
+Suggest five ways to be a better listener.
+Explain how to make a simple first-aid kit.
+Write a clear set of house rules for guests.
+Explain how to choose a healthy breakfast cereal.
+Suggest a beginner project for learning woodworking.
+Write a short guide to safe online shopping.
+Explain how to calculate the volume of a box.
+Plan a technology-free weekend with family.
+Write a Python script that renames files in a folder.
+Explain the difference between a list and a tuple in Python.
+Help me write unit tests for a simple calculator function.
+Explain how to use Git branches in a small team.
+Write a SQL query that finds duplicate email addresses.
+Explain the difference between HTTP and HTTPS.
+Help me design a simple REST API for a todo list.
+Write a JavaScript function that validates a form.
+Explain how to use environment variables in a project.
+Suggest a folder structure for a small Python project.
+Explain what a race condition is with an example.
+Write a bash script that backs up a directory.
+Explain the difference between a process and a thread.
+Help me read a stack trace and find the cause of an error.
+Write a regular expression that matches a date in YYYY-MM-DD format.
+Explain how caching improves web performance.
+Suggest three ways to make a website load faster.
+Explain the basics of responsive web design.
+Write a CSS rule that centers a div horizontally and vertically.
+Explain the difference between GET and POST requests.
+Help me plan a small data analysis project.
+Explain how to clean a dataset with pandas.
+Write a Python function that calculates the mean of a list.
+Explain the difference between correlation and causation.
+Suggest a simple visualization for monthly sales data.
+Explain how to choose the right chart for a dataset.
+Write a short guide to using virtual environments.
+Explain how to pin dependency versions for reproducibility.
+Help me write a clear bug report.
+Explain how to review a pull request effectively.
+Write a README template for a small open-source project.
+Explain how semantic versioning works.
+Suggest a simple CI pipeline for a Python project.
+Explain the difference between unit, integration, and end-to-end tests.
+Write a short guide to writing good commit messages.
+Explain how to handle secrets in a codebase.
+Help me choose between SQL and NoSQL for a project.
+Explain database normalization with a simple example.
+Write a SQL query that joins two tables.
+Explain what an index does in a database.
+Suggest a study plan for learning data structures.
+Explain the difference between an array and a linked list.
+Write pseudocode for binary search.
+Explain time complexity in simple terms.
+Help me understand recursion with a small example.
+Explain the concept of dynamic programming.
+Write a Python function that checks if a string is a palindrome.
+Explain how hash tables work.
+Suggest a beginner project for learning web development.
+Explain the difference between frontend and backend.
+Write a short guide to accessibility on the web.
+Explain how cookies and sessions work.
+Help me plan a personal portfolio website.
+Write a short bio section for a portfolio.
+Explain how to optimize images for the web.
+Suggest three free tools for learning graphic design.
+Explain the difference between raster and vector images.
+Write a simple color palette for a calm brand.
+Explain the basics of typography.
+Suggest a layout for a one-page resume.
+Explain how to give constructive feedback.
+Write a short guide to running an effective meeting.
+Help me create an agenda for a project kickoff.
+Explain how to prioritize tasks with the Eisenhower matrix.
+Write a template for a weekly status update.
+Suggest ways to reduce meeting fatigue.
+Explain how to delegate tasks effectively.
+Write a short guide to onboarding a new employee.
+Help me prepare questions for a performance review.
+Explain how to give a confident presentation.
+Write a simple project timeline with milestones.
+Explain the difference between a goal and a habit.
+Suggest a framework for making decisions.
+Help me write a personal development plan.
+Explain how to run a retrospective.
+Write a short guide to conflict resolution at work.
+Explain how to negotiate a salary politely.
+Suggest ways to build trust with a new team.
+Write a template for a project proposal.
+Explain how to estimate effort for a task.
+Help me plan a study routine for learning statistics.
+Explain the difference between mean, median, and mode.
+Write a simple explanation of standard deviation.
+Suggest a hands-on project for learning probability.
+Explain how to interpret a p-value.
+Write a short guide to survey design.
+Explain the difference between qualitative and quantitative research.
+Help me write a research question.
+Suggest a structure for a literature review.
+Explain how to take effective notes.
+Write a short guide to active recall.
+Explain the benefits of spaced repetition.
+Suggest a weekly plan for exam preparation.
+Help me create flashcards for vocabulary learning.
+Explain how to improve reading comprehension.
+Write a short guide to speed reading without losing understanding.
+Suggest ways to stay focused while studying.
+Explain how to build a morning study habit.
+Write a simple lesson plan for teaching fractions.
+Explain how to explain a complex idea to a child.
+Suggest a classroom activity for teamwork.
+Write a short guide to giving a book presentation.
+Help me prepare for a technical interview.
+Explain how to answer tell me about yourself in an interview.
+Suggest questions to ask a potential employer.
+Write a follow-up email after a phone interview.
+Explain how to evaluate a job offer.
+Suggest ways to transition into a new career.
+Write a short guide to freelancing basics.
+Explain how to set freelance rates.
+Help me write a client proposal.
+Explain how to manage scope creep.
+Suggest a simple contract checklist for freelancers.
+Write a polite email about a late payment.
+Explain how to build a professional network online.
+Suggest ways to maintain work-life balance.
+Write a short guide to time blocking.
+Explain how to plan a digital detox.
+Help me create a personal mission statement.
+Suggest journaling prompts for self-reflection.
+Explain how to track progress toward a goal.
+Write a short guide to building a new habit.
+Explain the difference between motivation and discipline.
+Suggest ways to recover from burnout.
+Write a short guide to asking for help.
+Explain how to set boundaries at work.
+Help me prepare for a difficult conversation.
+Suggest phrases for giving feedback kindly.
+Write a short guide to active listening.
+Explain how to apologize sincerely.
+Suggest ways to improve written communication.
+Write a template for a clear handover document.
+Explain how to document a process.
+Help me create a knowledge base for a team.
+Suggest a simple system for organizing files.
+Explain how to name files consistently.
+Write a short guide to backing up important data.
+Explain the difference between backup and archive.
+Suggest a password manager workflow.
+Write a short guide to two-factor authentication.
+Explain how to recognize a phishing email.
+Suggest ways to protect personal data online.
+Write a short guide to safe social media use.
+Explain how to review app permissions.
+Suggest steps to secure a home network.
+Write a short guide to encrypting a laptop.
+Explain how to recover a lost phone.
+Suggest ways to reduce digital clutter.
+Write a short guide to cleaning up an email inbox.
+Explain how to unsubscribe from unwanted messages safely.
+Explain the benefits of a balanced diet.
+Suggest a simple meal plan for a vegetarian week.
+Write a recipe for a healthy breakfast bowl.
+Explain how to read a recipe and adjust servings.
+Suggest ways to cook with less salt.
+Write a short guide to food safety in the kitchen.
+Explain how to freeze and thaw food safely.
+Suggest a beginner's guide to meal prep containers.
+Write a shopping list for a Mediterranean-style dinner.
+Explain the difference between whole grains and refined grains.
+Suggest healthy alternatives to sugary drinks.
+Write a short guide to reading food labels for sugar.
+Explain how to build a balanced plate.
+Suggest ways to eat more vegetables every day.
+Write a simple recipe for lentil soup.
+Explain how to make a vinaigrette from scratch.
+Suggest a menu for a small dinner party.
+Write a short guide to hosting a potluck.
+Explain how to pair cheese with fruit.
+Suggest a beginner's guide to making tea.
+Explain the difference between green, black, and oolong tea.
+Write a short guide to brewing pour-over coffee.
+Suggest ways to reduce caffeine gradually.
+Explain the benefits of drinking enough water.
+Write a simple hydration plan for a hot day.
+Suggest a beginner's guide to running.
+Explain how to build an exercise habit.
+Write a short guide to warming up before exercise.
+Suggest stretches for people who sit at a desk.
+Explain the difference between aerobic and strength training.
+Write a simple full-body workout for beginners.
+Suggest ways to stay active during a busy week.
+Explain how to prevent common running injuries.
+Write a short guide to rest days.
+Suggest a bedtime routine for better sleep.
+Explain how to improve sleep quality.
+Write a short guide to napping effectively.
+Suggest ways to manage stress.
+Explain the benefits of meditation.
+Write a simple breathing exercise for relaxation.
+Suggest a beginner's guide to yoga.
+Explain how to stretch safely.
+Write a short guide to posture at a desk.
+Suggest ways to reduce back pain from sitting.
+Explain how to choose a supportive chair.
+Write a short guide to setting up an ergonomic workspace.
+Suggest ways to protect your eyes at a computer.
+Explain how to take effective breaks.
+Write a short guide to walking meetings.
+Suggest ways to stay motivated to exercise.
+Explain how to plan a balanced week of workouts.
+Write a simple stretching routine for the morning.
+Suggest healthy snacks for travel.
+Explain how to stay hydrated on a long flight.
+Write a short guide to managing jet lag.
+Suggest ways to pack light for a weekend trip.
+Explain how to choose travel insurance.
+Write a short guide to booking affordable flights.
+Suggest a budget for a week in a European city.
+Explain how to use public bikes safely in a new city.
+Write a short guide to visiting museums respectfully.
+Suggest a packing list for a camping trip.
+Explain how to leave no trace outdoors.
+Write a short guide to reading a trail map.
+Suggest safety tips for hiking alone.
+Explain how to prepare for sudden weather changes.
+Write a short guide to choosing a tent.
+Suggest easy camping meals.
+Explain how to build a safe campfire.
+Write a short guide to stargazing.
+Suggest a beginner's guide to birdwatching.
+Explain how to identify common trees.
+Write a short guide to growing tomatoes in pots.
+Suggest easy vegetables for a beginner garden.
+Explain how to water plants correctly.
+Write a short guide to repotting a houseplant.
+Suggest ways to deal with common plant pests.
+Explain how to compost kitchen scraps.
+Write a short guide to mulching a garden.
+Suggest flowers that attract pollinators.
+Explain how to save seeds from herbs.
+Write a short guide to pruning shrubs.
+Suggest a simple garden layout for a small yard.
+Explain how to grow herbs on a windowsill.
+Write a short guide to caring for a cactus.
+Suggest ways to make a garden more water-efficient.
+Explain how to build a raised garden bed.
+Write a short guide to starting a balcony garden.
+Suggest plants that tolerate low light.
+Explain how to winterize a garden.
+Write a short guide to house cleaning in thirty minutes.
+Suggest a schedule for deep cleaning each room.
+Explain how to remove common stains from fabric.
+Write a short guide to doing laundry efficiently.
+Suggest ways to organize a closet.
+Explain how to declutter a room in one day.
+Write a short guide to storing seasonal clothing.
+Suggest a simple system for household paperwork.
+Explain how to clean a refrigerator safely.
+Write a short guide to maintaining a washing machine.
+Suggest ways to reduce energy use at home.
+Explain how to read an electricity bill.
+Write a short guide to draught-proofing a home.
+Suggest simple home repairs anyone can learn.
+Explain how to fix a squeaky door.
+Write a short guide to unclogging a drain safely.
+Suggest tools for a basic home toolkit.
+Explain how to hang a picture level.
+Write a short guide to painting a room.
+Suggest ways to make a rental feel like home.
+Explain how to choose a safe neighborhood.
+Write a short guide to renting an apartment.
+Suggest questions to ask a landlord.
+Explain how to read a lease agreement.
+Write a short guide to moving paperwork.
+Suggest ways to make new friends in a new city.
+Explain how to host a neighborhood gathering.
+Write a short guide to volunteering locally.
+Suggest ways to support local businesses.
+Explain how to join a community garden.
+Write a short guide to planning a family reunion.
+Suggest conversation topics for a family dinner.
+Explain how to resolve a disagreement with a neighbor.
+Write a short guide to being a good houseguest.
+Suggest etiquette for shared living spaces.
+Explain how to split chores fairly.
+Write a short guide to planning a date night at home.
+Suggest ways to celebrate a friend's achievement.
+Explain how to write a meaningful toast.
+Write a short guide to planning a small wedding.
+Suggest a budget-friendly anniversary idea.
+Explain how to choose a gift for someone who has everything.
+Write a short guide to thank-you notes.
+Suggest ways to stay in touch with long-distance friends.
+Explain how to support a friend who is grieving.
+Write a short guide to active listening in relationships.
+Suggest ways to build trust in a friendship.
+Explain how to set healthy boundaries with family.
+Write a short guide to co-parenting communication.
+Suggest ways to make family meals more enjoyable.
+Explain how to plan a screen-free evening.
+Write a short guide to playing board games with kids.
+Suggest outdoor activities for a family weekend.
+Explain how to teach a child to ride a bike.
+Write a short guide to reading with a child.
+Suggest simple science experiments for kids.
+Explain how to encourage curiosity in children.
+Write a short guide to helping with homework without pressure.
+Suggest ways to make learning fun at home.
+Explain how to praise effort instead of talent.
+Suggest a beginner's guide to drawing with pencils.
+Explain how to mix colors for a landscape.
+Write a short guide to sketching a portrait.
+Suggest daily drawing exercises.
+Explain the difference between watercolor and acrylic paint.
+Write a short guide to keeping a sketchbook.
+Suggest ways to find inspiration for art.
+Explain how to critique your own artwork.
+Write a short guide to photographing artwork.
+Suggest a beginner's guide to digital illustration.
+Explain how to use layers in image editing.
+Write a short guide to composing a photograph.
+Suggest photography tips for cloudy days.
+Explain how to take better portraits with a phone.
+Write a short guide to editing photos without overdoing it.
+Suggest ways to organize a photo library.
+Explain how to back up photos safely.
+Write a short guide to making a photo book.
+Suggest a beginner's guide to video editing.
+Explain how to record clean audio at home.
+Write a short guide to lighting a video call.
+Suggest ways to improve presentation slides.
+Explain how to design a simple poster.
+Write a short guide to choosing fonts for a project.
+Suggest a color scheme for a professional website.
+Explain how to create a logo for a small business.
+Write a short guide to brand consistency.
+Suggest ways to get feedback on a design.
+Explain the difference between UX and UI.
+Write a short guide to usability testing.
+Suggest a beginner's guide to playing guitar.
+Explain how to tune a guitar.
+Write a short guide to practicing scales.
+Suggest ways to improve rhythm.
+Explain how to read guitar tablature.
+Write a short guide to learning a song by ear.
+Suggest a beginner's keyboard practice routine.
+Explain the basics of music theory.
+Write a short guide to understanding time signatures.
+Suggest ways to train your ear.
+Explain how to record a simple song at home.
+Write a short guide to songwriting structure.
+Suggest prompts for writing lyrics.
+Explain how to collaborate with other musicians.
+Write a short guide to performing live for the first time.
+Suggest a beginner's guide to chess openings.
+Explain chess notation.
+Write a short guide to solving chess puzzles.
+Suggest ways to analyze your own chess games.
+Explain the rules of tennis in simple terms.
+Write a short guide to improving your serve.
+Suggest a beginner's guide to swimming.
+Explain how to train for a 5K run.
+Write a short guide to cycling safety.
+Suggest ways to improve balance and agility.
+Explain how to warm up for a team sport.
+Write a short guide to sportsmanship.
+Suggest ways to recover after intense exercise.
+Explain how to avoid overtraining.
+Write a short guide to buying your first bike.
+Suggest a beginner's guide to investing.
+Explain the difference between an index fund and an active fund.
+Write a short guide to building an emergency fund.
+Suggest ways to pay off debt faster.
+Explain how to make a simple net worth statement.
+Write a short guide to understanding taxes for a freelancer.
+Suggest ways to save money on groceries.
+Explain how to compare insurance plans.
+Write a short guide to planning for retirement.
+Suggest a simple approach to ethical investing.
+Explain how to diversify a portfolio.
+Write a short guide to reading a financial statement.
+Suggest ways to teach children about money.
+Explain the difference between debit and credit.
+Write a short guide to avoiding impulse purchases.
+Suggest a monthly budget template.
+Explain how to track spending without stress.
+Write a short guide to negotiating a bill.
+Suggest ways to reduce subscription costs.
+Explain how to plan a large purchase.
+Write a short guide to saving for a vacation.
+Suggest ways to earn extra income with a side project.
+Explain how to price a handmade product.
+Write a short guide to selling online safely.
+Suggest ways to package an item for shipping.
+Explain how to handle customer returns.
+Write a short guide to writing product reviews honestly.
+Suggest ways to build a small business website.
+Explain how to use social media for a small business.
+Write a short guide to email marketing basics.
+Suggest ways to measure whether a campaign worked.
+Explain how to survey customers.
+Write a short guide to creating a simple logo.
+Suggest ways to improve customer service.
+Explain how to handle a complaint calmly.
+Write a short guide to creating an FAQ page.
+Suggest ways to reduce waste in an office.
+Explain how to run a paperless office.
+Write a short guide to energy-efficient lighting.
+Suggest ways to make a home more sustainable.
+Explain how to calculate a carbon footprint.
+Write a short guide to choosing renewable energy.
+Suggest ways to conserve water at home.
+Explain how to start a recycling program at work.
+Write a short guide to repairing instead of replacing.
+Suggest ways to donate used items responsibly.
+Explain how to organize a community cleanup.
+Write a short guide to planting a tree.
+Suggest ways to protect local wildlife.
+Explain how to make a bee-friendly garden.
+Write a short guide to reducing food waste in a restaurant.
+Suggest ways to celebrate Earth Day.
+Explain how to teach children about the environment.
+Write a short guide to sustainable fashion.
+Suggest ways to care for clothes so they last longer.
+Explain how to choose eco-friendly cleaning products.
+Write a short guide to reducing plastic in the kitchen.
+Suggest ways to reuse glass jars.
+Explain how to compost in a community garden.
+Write a short guide to growing food on a balcony.
+Suggest ways to preserve summer produce.
+Explain how to make jam safely.
+Write a short guide to pickling vegetables.
+Suggest ways to store herbs so they last.
+Explain how to dry fruit at home.
+Write a short guide to making yogurt.
+Suggest simple homemade snacks.
+Explain how to plan meals around seasonal produce.
+Write a short guide to shopping at a farmers market.
+Suggest questions to ask a local farmer.
+Explain how to choose ripe fruit.
+Write a short guide to storing vegetables correctly.
+Suggest ways to use leftovers creatively.
+Explain how to make a vegetable stock from scraps.
+Write a short guide to freezing meals.
+Suggest a menu for a picnic with friends.
+Explain how to keep food cool without a refrigerator.
+Write a short guide to safe food handling outdoors.
+Suggest ways to make a camping breakfast.
+Explain how to build a balanced trail snack pack.
+Write a short guide to planning a road trip.
+Suggest car games for a long drive.
+Explain how to stay safe on a long drive.
+Write a short guide to choosing a rest stop.
+Suggest ways to keep kids entertained while traveling.
+Explain how to pack a car efficiently.
+Write a short guide to traveling with a pet.
+Suggest ways to find local events while traveling.
+Explain how to be a respectful tourist.
+Write a short guide to documenting a trip in a journal.
