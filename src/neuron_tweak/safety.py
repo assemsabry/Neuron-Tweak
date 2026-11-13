@@ -308,11 +308,15 @@ def run_safety_pipeline(
     runtime: "ModelRuntime",
     console: "Console",
     args: object,
+    *,
+    profile: str = "safety",
+    identity_values: dict[str, str] | None = None,
 ) -> None:
-    """Localize safety neurons, build a suppression plan, apply, and save."""
+    """Localize neurons, build a suppression plan, apply, and save."""
     try:
         good_split, bad_split = load_workflow_prompts(
-            "safety",
+            profile,
+            identity_values=identity_values,
             evaluation_size=args.evaluation_size,
             seed=args.seed,
         )

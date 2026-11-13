@@ -196,6 +196,36 @@ def build_parser() -> argparse.ArgumentParser:
         help="Apply the best safety study trial and save it.",
     )
     parser.add_argument(
+        "--identity-model-name",
+        default="the assistant",
+        help="Target identity model name for the Identity workflow.",
+    )
+    parser.add_argument(
+        "--identity-vendor",
+        default="an AI lab",
+        help="Target identity vendor for the Identity workflow.",
+    )
+    parser.add_argument(
+        "--identity-owner",
+        default="an organization",
+        help="Target identity owner for the Identity workflow.",
+    )
+    parser.add_argument(
+        "--identity-founder",
+        default="a research team",
+        help="Target identity founder for the Identity workflow.",
+    )
+    parser.add_argument(
+        "--identity-product-line",
+        default="an AI product",
+        help="Target identity product line for the Identity workflow.",
+    )
+    parser.add_argument(
+        "--identity-assistant-persona",
+        default="a helpful assistant",
+        help="Target identity assistant persona for the Identity workflow.",
+    )
+    parser.add_argument(
         "--save-directory",
         "-o",
         metavar="PATH",
@@ -337,7 +367,7 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
         runtime.close()
 
 
-def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
+def validate_workflow_args(console: Console, args: argparse.Namespace) -> bool:
     for flag, value in (
         ("--max-scale", args.max_scale),
         ("--top-neurons", args.top_neurons),
@@ -347,10 +377,10 @@ def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
     ):
         if value <= 0:
             console.print(f"[red]{flag} must be greater than zero.[/]")
-            return
+            return False
     if args.analysis_prompts < 0:
         console.print("[red]--analysis-prompts cannot be negative.[/]")
-        return
+        return False
     if getattr(args, "evaluate", False):
         for flag, value in (
             ("--eval-max-new-tokens", args.eval_max_new_tokens),
@@ -358,16 +388,20 @@ def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
         ):
             if value <= 0:
                 console.print(f"[red]{flag} must be greater than zero.[/]")
-                return
+                return False
     if getattr(args, "study", False):
         if args.study_trials <= 0:
             console.print("[red]--study-trials must be greater than zero.[/]")
-            return
+            return False
         if args.study_startup_trials < 0:
-            console.print(
-                "[red]--study-startup-trials cannot be negative.[/]"
-            )
-            return
+            console.print("[red]--study-startup-trials cannot be negative.[/]")
+            return False
+    return True
+
+
+def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
+    if not validate_workflow_args(console, args):
+        return
 
     console.print("[bold]Loading model...[/]")
     runtime = ModelRuntime(
@@ -384,6 +418,45 @@ def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
             console.print(f"* {line}")
         console.print()
         run_safety_pipeline(runtime, console, args)
+    except (ModelRuntimeError, AnalysisError, NeuronSpecError) as error:
+        console.print(f"[red]{error}[/]")
+    finally:
+        runtime.close()
+
+
+def run_identity(args: argparse.Namespace, model: str, console: Console) -> None:
+    """Run the Identity Tweak localization/suppression pipeline."""
+    if not validate_workflow_args(console, args):
+        return
+
+    console.print("[bold]Loading model...[/]")
+    runtime = ModelRuntime(
+        model,
+        dtype=args.dtype,
+        device_map=args.device_map,
+        quantization=args.quantization,
+        trust_remote_code=args.trust_remote_code,
+    )
+    try:
+        info = runtime.load()
+        console.print()
+        for line in info.lines():
+            console.print(f"* {line}")
+        console.print()
+        run_safety_pipeline(
+            runtime,
+            console,
+            args,
+            profile="identity",
+            identity_values={
+                "model_name": args.identity_model_name,
+                "vendor": args.identity_vendor,
+                "owner": args.identity_owner,
+                "founder": args.identity_founder,
+                "product_line": args.identity_product_line,
+                "assistant_persona": args.identity_assistant_persona,
+            },
+        )
     except (ModelRuntimeError, AnalysisError, NeuronSpecError) as error:
         console.print(f"[red]{error}[/]")
     finally:
@@ -432,6 +505,9 @@ def run() -> None:
         return
     if profile == "safety":
         run_safety(args, model or "", console)
+        return
+    if profile == "identity":
+        run_identity(args, model or "", console)
         return
 
     console.print(

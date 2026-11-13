@@ -28,11 +28,11 @@ Safety Tweak and Custom Tweak are implemented end to end.
   bad prompts through it, captures MLP neuron activations, scores every neuron
   with Cohen's d, selects the top neurons per layer, and suppresses them with a
   reversible edit. The 100 held-out prompts per class are split and reported;
-  automated before/after generation scoring is the next phase.
+  automated before/after generation scoring is available with `--evaluate`.
 - Custom Tweak: model loading, L/N/delta parsing, add/update/remove editing,
   direct MLP projection scaling, reset, and model saving.
-- Identity Tweak still requires the identity activation and optimization
-  pipeline.
+- Identity Tweak: runs the same contrastive capture/scoring/suppression
+  pipeline with the target-identity and current-identity prompt sets.
 
 ## Installation
 
