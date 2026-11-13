@@ -151,6 +151,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="Apply Safety/Identity edits without a confirmation prompt.",
     )
     parser.add_argument(
+        "--evaluate",
+        action="store_true",
+        help="Generate before/after responses and report the refusal rate.",
+    )
+    parser.add_argument(
+        "--eval-max-new-tokens",
+        type=int,
+        default=64,
+        help="Max new tokens for evaluation responses (default: 64).",
+    )
+    parser.add_argument(
+        "--eval-batch-size",
+        type=int,
+        default=4,
+        help="Batch size for evaluation responses (default: 4).",
+    )
+    parser.add_argument(
         "--save-directory",
         "-o",
         metavar="PATH",
@@ -306,6 +323,14 @@ def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
     if args.analysis_prompts < 0:
         console.print("[red]--analysis-prompts cannot be negative.[/]")
         return
+    if getattr(args, "evaluate", False):
+        for flag, value in (
+            ("--eval-max-new-tokens", args.eval_max_new_tokens),
+            ("--eval-batch-size", args.eval_batch_size),
+        ):
+            if value <= 0:
+                console.print(f"[red]{flag} must be greater than zero.[/]")
+                return
 
     console.print("[bold]Loading model...[/]")
     runtime = ModelRuntime(

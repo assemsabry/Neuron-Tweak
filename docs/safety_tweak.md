@@ -31,7 +31,9 @@ applied from the original weights on every run.
    contribution. Use `--neuron-delta -0.5` for a gentler suppression, or a
    positive delta to amplify.
 6. **Apply and save.** The plan is applied to `--target` (default `down_proj`),
-   and the edited model is written to `--save-directory` when provided.
+   and the edited model is written to `--save-directory` when provided. With
+   `--evaluate`, the tool reports the refusal rate before applying the plan and
+   again after applying it.
 
 ## Commands
 
@@ -41,6 +43,9 @@ neuron-tweak <model> --profile safety --dry-run
 
 # Apply the default plan and save.
 neuron-tweak <model> --profile safety --yes --save-directory ./out
+
+# Apply, save, and report the refusal rate before/after the edit.
+neuron-tweak <model> --profile safety --evaluate --yes --save-directory ./out
 
 # Quick pass with 50 prompts per class.
 neuron-tweak <model> --profile safety --analysis-prompts 50 --dry-run
@@ -70,7 +75,24 @@ neuron-tweak <model> --profile safety --target all --save-directory ./out
 | `--seed` | `0` | Shuffle seed for the train/evaluation split. |
 | `--yes` | off | Skip the apply confirmation. |
 | `--dry-run` | off | Analyze and print, but do not change weights. |
+| `--evaluate` | off | Generate before/after responses and report the refusal rate. |
+| `--eval-max-new-tokens` | `64` | Max new tokens for evaluation responses. |
+| `--eval-batch-size` | `4` | Batch size for evaluation responses. |
 | `--save-directory` | none | Directory for the edited model. |
+
+## Evaluation
+
+With `--evaluate`, the tool generates responses for the held-out bad prompts
+before applying the plan and again after applying it, then reports the refusal
+rate (the fraction of responses containing a refusal marker) in both runs:
+
+- Before: reported before the edits are applied.
+- After: reported after the edits are applied.
+- In dry-run mode, only the before rate is reported and no weights change.
+
+```bash
+neuron-tweak <model> --profile safety --evaluate --yes --save-directory ./out
+```
 
 ## What the edit changes
 
@@ -87,9 +109,11 @@ reverse. `--target all` also scales the matching row of `up_proj` and
   This is fast and works well for localization, but it does not separate
   prompt tokens from response tokens. A later phase will capture response-only
   activations and add logit-lens scoring.
-- The 100 held-out evaluation prompts are split and reported but not yet used
-  for automated refusal-rate scoring. Until that phase lands, compare a few
-  generations manually before trusting an edit.
+- The 100 held-out evaluation prompts are used for automated refusal-rate
+  scoring when `--evaluate` is set. Before applying the plan the tool reports the
+  refusal rate, applies the edits, and reports the refusal rate again. Until
+  that phase lands in the general evaluation flow, compare a few generations
+  manually before trusting an edit.
 - Cohen's d is a screening signal, not proof of causality. Inspect the top
   neurons, start with a small `--top-neurons` value, and keep the original
   model.

@@ -112,12 +112,17 @@ Defaults:
 Useful flags: `--analysis-batch-size`, `--analysis-prompts`,
 `--max-sequence-length`, `--top-neurons`, `--min-score`, `--layers`,
 `--neuron-delta`, `--target`, `--evaluation-size`, `--seed`, `--yes`,
-`--dry-run`, and `--save-directory`.
+`--dry-run`, `--evaluate`, `--eval-max-new-tokens`, `--eval-batch-size`, and
+`--save-directory`.
 
 The score is Cohen's d: `(mean_bad - mean_good) / pooled_std`. Positive scores
 mean the neuron is more active on refusal-triggering prompts. The plan is
 applied from the original weights, so running Safety Tweak again replaces the
 previous plan rather than stacking edits.
+
+With `--evaluate`, the tool generates responses for the held-out bad prompts
+before applying the plan and again after applying it, then reports the refusal
+rate (the fraction of responses containing a refusal marker) in both runs.
 
 ## Custom Tweak syntax
 

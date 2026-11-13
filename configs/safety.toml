@@ -1,4 +1,4 @@
-# Refusal workflow configuration.
+# Safety workflow configuration.
 # Usage: neuron-tweak <model> --config configs/safety.toml
 
 profile = "safety"

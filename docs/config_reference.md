@@ -70,6 +70,10 @@ working directory takes precedence, or use `--config path/to/file.toml`.
 | `--seed` | `0` | Shuffle seed for the train/evaluation split. |
 | `--yes` | off | Skip the apply confirmation. |
 | `--dry-run` | off | Analyze and print, but do not change weights. |
+| `--evaluate` | off | Generate before/after responses and report the refusal rate. |
+| `--eval-max-new-tokens` | `64` | Max new tokens for evaluation responses. |
+| `--eval-batch-size` | `4` | Batch size for evaluation responses. |
+| `--save-directory` | none | Directory for the edited model. |
 
 The shared `--target`, `--max-scale`, `--save-directory`, `--dtype`,
 `--device-map`, `--quantization`, and `--trust-remote-code` options also apply

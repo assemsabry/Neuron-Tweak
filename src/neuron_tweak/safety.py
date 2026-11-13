@@ -37,7 +37,9 @@ from .analysis import (
     top_neurons,
 )
 from .custom import render_applied, render_plan
+from .evaluator import evaluate_refusal_rate
 from .prompts import PromptDatasetError, load_workflow_prompts
+from .scorer import RefusalRateScorer
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -243,6 +245,25 @@ def run_safety_pipeline(
     )
     render_plan(console, plan, args.target)
 
+    evaluation_before: float | None = None
+    evaluation_after: float | None = None
+    if args.evaluate:
+        scorer = RefusalRateScorer()
+        evaluation_before = evaluate_refusal_rate(
+            runtime,
+            runtime.tokenizer,
+            bad_split.evaluation,
+            scorer,
+            max_new_tokens=args.eval_max_new_tokens,
+            batch_size=args.eval_batch_size,
+            max_length=args.max_sequence_length,
+        )
+        console.print()
+        console.print(
+            f"* Refusal rate before edits: {evaluation_before:.3f} "
+            f"({evaluation_before * 100:.1f}%)"
+        )
+
     if args.dry_run:
         console.print("[yellow]Dry run: no weights were changed.[/]")
         return
@@ -260,6 +281,22 @@ def run_safety_pipeline(
     results = runtime.apply_plan(plan, target=args.target)
     console.print()
     render_applied(console, results)
+
+    if args.evaluate:
+        evaluation_after = evaluate_refusal_rate(
+            runtime,
+            runtime.tokenizer,
+            bad_split.evaluation,
+            RefusalRateScorer(),
+            max_new_tokens=args.eval_max_new_tokens,
+            batch_size=args.eval_batch_size,
+            max_length=args.max_sequence_length,
+        )
+        console.print()
+        console.print(
+            f"* Refusal rate after edits: {evaluation_after:.3f} "
+            f"({evaluation_after * 100:.1f}%)"
+        )
 
     save_directory = args.save_directory
     if save_directory is None and sys.stdin.isatty():
