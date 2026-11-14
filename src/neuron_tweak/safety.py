@@ -202,7 +202,7 @@ class SafetyNeuronObjective:
         self.baseline_good_length = baseline_good_length
         self.goal = goal
 
-    def __call__(self, trial: Any) -> float:
+    def __call__(self, trial: Any) -> float | tuple[float, float]:
         if hasattr(trial, "params"):
             params = trial.params or {}
         else:
@@ -227,25 +227,26 @@ class SafetyNeuronObjective:
             batch_size=self.batch_size,
             max_length=self.max_length,
         )
-        score = self.goal * bad_metric
-        if not self.heldout_good_prompts or self.capability_weight <= 0.0:
-            return score
-
-        good = evaluate_responses(
-            self.runtime,
-            self.tokenizer,
-            self.heldout_good_prompts,
-            self.scorer,
-            max_new_tokens=self.max_new_tokens,
-            batch_size=self.batch_size,
-            max_length=self.max_length,
-        )
-        penalty = self.goal * good.refusal_rate
-        if self.baseline_good_length and good.mean_length > 0:
-            penalty += max(
-                0.0, 1.0 - good.mean_length / self.baseline_good_length
+        bad_value = self.goal * bad_metric
+        capability_value = 0.0
+        if self.heldout_good_prompts and self.capability_weight > 0.0:
+            good = evaluate_responses(
+                self.runtime,
+                self.tokenizer,
+                self.heldout_good_prompts,
+                self.scorer,
+                max_new_tokens=self.max_new_tokens,
+                batch_size=self.batch_size,
+                max_length=self.max_length,
             )
-        return score + self.capability_weight * penalty
+            capability_value = self.capability_weight * (self.goal * good.refusal_rate)
+            if self.baseline_good_length and good.mean_length > 0:
+                capability_value += self.capability_weight * max(
+                    0.0, 1.0 - good.mean_length / self.baseline_good_length
+                )
+        if not self.heldout_good_prompts or self.capability_weight <= 0.0:
+            return bad_value
+        return bad_value, capability_value
 
 
 def run_safety_study(
@@ -314,29 +315,67 @@ def run_safety_study(
         f"{study.n_trials} trials[/]"
     )
     results = study.run()
+    best = results[0]
+    for result in results[1:]:
+        result_capability = (
+            float(result.capability) if result.capability is not None else float("inf")
+        )
+        best_capability = (
+            float(best.capability) if best.capability is not None else float("inf")
+        )
+        if direction == "minimize":
+            is_better = (
+                result.score < best.score
+                or (
+                    result.score == best.score
+                    and result_capability < best_capability
+                )
+            )
+        else:
+            is_better = (
+                result.score > best.score
+                or (
+                    result.score == best.score
+                    and result_capability < best_capability
+                )
+            )
+        if is_better:
+            best = result
     ranked = sorted(
         results,
-        key=lambda result: result.score,
+        key=lambda result: (
+            float(result.score),
+            float(result.capability) if result.capability is not None else float("inf"),
+        ),
         reverse=direction == "maximize",
     )
-    best = ranked[0]
 
     table = Table(title=f"Optuna {workflow.lower()} study")
     table.add_column("Trial", justify="right")
     table.add_column("Top neurons", justify="right")
     table.add_column("Delta", justify="right")
     table.add_column("Score", justify="right")
+    table.add_column("Capability", justify="right")
     for result in ranked:
+        capability = (
+            float(result.capability)
+            if result.capability is not None
+            else float("inf")
+        )
         table.add_row(
             str(result.trial_number),
             str(int(result.params.get("top_k", 1))),
             f"{float(result.params.get('delta', -1.0)):+.2f}",
-            f"{result.score:.4f}",
+            f"{float(result.score):.4f}",
+            f"{capability:.4f}",
         )
     console.print(table)
+    best_capability = (
+        float(best.capability) if best.capability is not None else float("inf")
+    )
     console.print(
         f"[green]Best trial: {best.trial_number} with objective score "
-        f"{best.score:.4f}[/]"
+        f"{best.score:.4f} (capability penalty {best_capability:.4f})[/]"
     )
 
     chosen = best

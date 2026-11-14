@@ -113,10 +113,10 @@ With `--study`, the tool runs an Optuna study over the selected safety neurons.
 - Each trial samples `top_k` (from 1 to the number of selected neurons) and a
   steering `delta` (from -1 to 1).
 - The trial applies the corresponding plan and measures the held-out refusal
-  rate.
-- The trial objective also penalizes good-prompt regressions: the good-prompt
-  refusal rate and any drop in mean response length are added to the score,
-  weighted by `--study-capability-weight` (default `0.5`).
+  rate plus the good-prompt capability penalty.
+- The study is a two-objective Optuna study: the refusal rate and the capability
+  penalty. The best trial is the one with the lowest refusal rate, tie-broken by
+  the lowest capability penalty; the table reports both values.
 - The best trial is reported, and `--study-apply-best` applies and saves it.
 
 ```bash

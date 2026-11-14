@@ -119,8 +119,42 @@ def test_safety_objective_includes_capability_penalty(runtime):
         def suggest_float(self, name, low, high, **kwargs):
             return float(self.params.get(name, low))
 
-    # Both bad and good responses refuse, so the score is 1.0 + 0.5 * 1.0.
-    assert objective(FakeTrial()) == pytest.approx(1.5)
+    # Both bad and good responses refuse, so the Pareto pair is (1.0, 0.5).
+    bad_value, capability_value = objective(FakeTrial())
+    assert bad_value == pytest.approx(1.0)
+    assert capability_value == pytest.approx(0.5)
+
+
+def test_safety_objective_returns_pareto_pair(runtime):
+    objective = SafetyNeuronObjective(
+        runtime,
+        _make_neurons(2),
+        ["q1"],
+        scorer=RefusalRateScorer(),
+        max_new_tokens=4,
+        batch_size=2,
+        max_length=64,
+        tokenizer=RefusingGenerationTokenizer(),
+        heldout_good_prompts=["g1"],
+        capability_weight=0.5,
+        baseline_good_length=5.0,
+    )
+
+    class FakeTrial:
+        params = {"top_k": 1, "delta": -1.0}
+
+        def suggest_int(self, name, low, high, **kwargs):
+            return int(self.params.get(name, low))
+
+        def suggest_float(self, name, low, high, **kwargs):
+            return float(self.params.get(name, low))
+
+    value = objective(FakeTrial())
+
+    assert isinstance(value, tuple)
+    bad_value, capability_value = value
+    assert bad_value == pytest.approx(1.0)
+    assert capability_value == pytest.approx(0.5)
 
 
 def test_safety_objective_goal_maximize_negates_metric(runtime):
@@ -148,8 +182,13 @@ def test_safety_objective_goal_maximize_negates_metric(runtime):
         def suggest_float(self, name, low, high, **kwargs):
             return float(self.params.get(name, low))
 
-    # Match rates are 1.0 on both sides, so the score is -1.0 - 0.5 * 1.0.
-    assert objective(FakeTrial()) == pytest.approx(-1.5)
+    # Match rates are 1.0 on both sides, so the Pareto pair is (-1.0, -0.5).
+    value = objective(FakeTrial())
+
+    assert isinstance(value, tuple)
+    bad_value, capability_value = value
+    assert bad_value == pytest.approx(-1.0)
+    assert capability_value == pytest.approx(-0.5)
 
 
 def test_run_safety_study_returns_best(runtime):

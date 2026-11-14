@@ -173,9 +173,9 @@ prompts, so over-suppression shows up as a capability regression.
 
 With `--study`, the tool runs an Optuna study over the selected neurons. Each
 trial samples `top_k` and a steering `delta`, applies the resulting plan, and
-reports the held-out refusal rate. The objective also penalizes good-prompt
-regressions through `--study-capability-weight` (default `0.5`). Use
-`--study-apply-best` to apply and save the best trial.
+reports the held-out refusal rate plus a capability penalty from the good
+prompts. The study is two-objective (minimize refusal rate, minimize capability
+penalty) and applies the best trial through `--study-apply-best`.
 
 ```bash
 # Run a 30-trial Optuna study and apply the best trial.

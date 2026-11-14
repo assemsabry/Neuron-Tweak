@@ -658,7 +658,7 @@ Completed:
   resolution, and CLI default merging.
 - `src/neuron_tweak/manifest.py`: edit manifests written next to saved models,
   plus manifest loading and plan reconstruction.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (105 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (106 tests
   passing, including tiny Llama editing, activation-capture, generation,
   evaluation, capability-aware Optuna study, identity pipeline, config,
   batch-probe, manifest, manifest re-apply, plan-export, generation, and
@@ -672,8 +672,9 @@ Not yet implemented:
 
 - Identity Tweak logit-lens and causal-tracing refinement beyond the
   contrastive activation pipeline.
-- Full multi-objective Pareto studies; the current study uses a scalar
-  refusal-plus-capability score.
+- Full Pareto front selection for `--study`; the current study runs a
+  two-objective study (refusal rate and capability penalty) and applies the best
+  trial.
 - Capability benchmarks beyond the refusal rate and mean response length.
 - General response generation beyond the evaluation pass.
 - Chat, benchmark, and upload actions.

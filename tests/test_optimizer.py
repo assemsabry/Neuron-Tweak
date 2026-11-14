@@ -24,6 +24,27 @@ def test_neuron_study_runs_trials():
     assert best.score < 0.0
 
 
+def test_neuron_study_supports_multi_objective():
+    def objective(trial):
+        top_k = trial.suggest_int("top_k", 1, 2)
+        return (float(top_k), float(top_k) * 2.0)
+
+    study = NeuronStudy(
+        objective,
+        n_trials=2,
+        n_startup_trials=1,
+        direction=("minimize", "minimize"),
+    )
+
+    results = study.run()
+
+    assert len(results) == 2
+    for result in results:
+        assert isinstance(result.score, float)
+        assert result.capability is not None
+        assert result.capability >= result.score
+
+
 def test_neuron_study_rejects_invalid_settings():
     with pytest.raises(OptimizerError):
         NeuronStudy(lambda trial: 0.0, n_trials=0)
