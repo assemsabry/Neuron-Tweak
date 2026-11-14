@@ -8,6 +8,7 @@ from neuron_tweak.evaluator import (
     evaluate_refusal_rate,
     evaluate_responses,
     generate_responses,
+    generate_single_response,
 )
 from neuron_tweak.scorer import IdentityMatchScorer, RefusalRateScorer
 
@@ -64,6 +65,18 @@ def test_generate_responses_requires_prompts(runtime):
 
     with pytest.raises(EvaluationError):
         _generate(runtime, FakeGenerationTokenizer(), [])
+
+
+def test_generate_single_response_returns_text(runtime):
+    response = generate_single_response(
+        runtime,
+        FakeGenerationTokenizer(),
+        "hello",
+        max_new_tokens=4,
+        max_length=64,
+    )
+
+    assert response == "response-0"
 
 
 def test_evaluate_responses_returns_metrics(runtime):

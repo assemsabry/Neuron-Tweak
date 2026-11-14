@@ -86,6 +86,31 @@ def generate_responses(
     return responses
 
 
+def generate_single_response(
+    runtime: "ModelRuntime",
+    tokenizer: Any | None,
+    prompt: str,
+    *,
+    max_new_tokens: int = 128,
+    max_length: int = 512,
+) -> str:
+    """Generate one response for a single user prompt."""
+    effective_tokenizer = tokenizer if tokenizer is not None else runtime.tokenizer
+    if effective_tokenizer is None:
+        raise EvaluationError(
+            "A tokenizer is required for response generation"
+        )
+    responses = generate_responses(
+        runtime,
+        effective_tokenizer,
+        [prompt],
+        max_new_tokens=max_new_tokens,
+        batch_size=1,
+        max_length=max_length,
+    )
+    return responses[0]
+
+
 def evaluate_responses(
     runtime: "ModelRuntime",
     tokenizer: Any | None,

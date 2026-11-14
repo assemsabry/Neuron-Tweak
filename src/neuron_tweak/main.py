@@ -7,12 +7,19 @@ import sys
 from pathlib import Path
 
 from rich.console import Console
+from rich.markup import escape
 
 from . import __version__
 from .analysis import AnalysisError
 from .banner import print_banner
 from .config import ConfigError, config_value, load_config, resolve_config_path
-from .custom import render_plan, run_custom_pipeline, save_plan_to
+from .custom import (
+    render_applied,
+    render_plan,
+    run_custom_pipeline,
+    save_plan_to,
+)
+from .evaluator import EvaluationError, generate_single_response
 from .manifest import ManifestError, load_manifest, plan_from_manifest
 from .model import (
     TARGETS,
@@ -284,6 +291,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Write the final neuron plan to a text file.",
     )
     parser.add_argument(
+        "--generate",
+        metavar="PROMPT",
+        default=None,
+        help=(
+            "Generate one response from a prompt, optionally after applying "
+            "the edits from a saved manifest."
+        ),
+    )
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=128,
+        help="Maximum tokens for a single generated response (default: 128).",
+    )
+    parser.add_argument(
         "--interactive",
         action="store_true",
         help="Open the Custom Tweak editor even when specifications are provided.",
@@ -446,6 +468,64 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
             interactive=interactive,
         )
     except ModelRuntimeError as error:
+        console.print(f"[red]{error}[/]")
+    finally:
+        runtime.close()
+
+
+def run_generate(args: argparse.Namespace, model: str, console: Console) -> None:
+    """Generate one response, optionally after applying a saved edit."""
+    if getattr(args, "from_manifest", None) and (
+        args.custom or args.custom_file
+    ):
+        console.print(
+            "[red]Use either --from-manifest or --custom/--custom-file, "
+            "not both.[/]"
+        )
+        return
+
+    console.print("[bold]Loading model...[/]")
+    runtime = ModelRuntime(
+        model,
+        dtype=args.dtype,
+        device_map=args.device_map,
+        quantization=args.quantization,
+        trust_remote_code=args.trust_remote_code,
+    )
+    try:
+        info = runtime.load()
+        console.print()
+        for line in info.lines():
+            console.print(f"* {line}")
+        if getattr(args, "from_manifest", None):
+            manifest = load_manifest(args.from_manifest)
+            manifest_target = str(manifest.get("target", "down_proj"))
+            if manifest_target != args.target:
+                console.print(
+                    f"[red]Manifest target is {manifest_target}; pass "
+                    f"--target {manifest_target} to apply it.[/]"
+                )
+                return
+            plan = plan_from_manifest(manifest)
+            results = runtime.apply_plan(plan, target=args.target)
+            console.print()
+            render_applied(console, results)
+        response = generate_single_response(
+            runtime,
+            runtime.tokenizer,
+            args.generate,
+            max_new_tokens=args.max_new_tokens,
+            max_length=args.max_sequence_length,
+        )
+        console.print()
+        console.print(f"* Response: {escape(response)}")
+        console.print(f"* Generated {len(response.split())} words")
+    except (
+        ModelRuntimeError,
+        AnalysisError,
+        NeuronSpecError,
+        EvaluationError,
+    ) as error:
         console.print(f"[red]{error}[/]")
     finally:
         runtime.close()
@@ -643,6 +723,10 @@ def run() -> None:
         model = ask_model(console)
     if model is None and not custom_dry_run:
         console.print("[red]No model selected. Exiting.[/]")
+        return
+
+    if getattr(args, "generate", None):
+        run_generate(args, model or "", console)
         return
 
     profile = args.profile or ask_profile(console)

@@ -641,8 +641,8 @@ Completed:
   Cohen's d neuron scoring.
 - `src/neuron_tweak/safety.py`: Safety Tweak localization, top-neuron
   selection, suppression plan, apply, and save pipeline.
-- `src/neuron_tweak/evaluator.py`: greedy response generation, refusal-rate
-  scoring, and good-prompt response metrics.
+- `src/neuron_tweak/evaluator.py`: greedy response generation, single-response
+  generation, refusal-rate scoring, and good-prompt response metrics.
 - `src/neuron_tweak/scorer.py`: scorer base class, refusal-rate scorer, and
   identity-match scorer.
 - `src/neuron_tweak/optimizer.py`: Optuna neuron study helpers and the
@@ -658,10 +658,12 @@ Completed:
   resolution, and CLI default merging.
 - `src/neuron_tweak/manifest.py`: edit manifests written next to saved models,
   plus manifest loading and plan reconstruction.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (101 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (102 tests
   passing, including tiny Llama editing, activation-capture, generation,
   evaluation, capability-aware Optuna study, identity pipeline, config,
-  batch-probe, manifest, manifest re-apply, and plan-export integration tests).
+  batch-probe, manifest, manifest re-apply, plan-export, and generation
+  integration tests).
+
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).

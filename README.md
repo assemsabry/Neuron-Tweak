@@ -154,7 +154,7 @@ Useful flags: `--analysis-batch-size`, `--auto-batch-size`,
 `--max-sequence-length`, `--top-neurons`, `--min-score`, `--layers`,
 `--neuron-delta`, `--target`, `--evaluation-size`, `--seed`, `--yes`,
 `--dry-run`, `--evaluate`, `--eval-max-new-tokens`, `--eval-batch-size`,
-`--save-plan`, and `--save-directory`.
+`--save-plan`, `--generate "prompt"`, and `--save-directory`.
 
 With `--auto-batch-size`, the tool probes the model with growing forward-pass
 batches and uses the largest size that fits in device memory, capped by
