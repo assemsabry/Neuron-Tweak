@@ -32,9 +32,10 @@ applied from the original weights on every run.
    positive delta to amplify.
 6. **Apply and save.** The plan is applied to `--target` (default `down_proj`),
    and the edited model is written to `--save-directory` when provided, along
-   with a `neuron_tweak_manifest.json` record of every edit. With `--evaluate`,
-   the tool reports the refusal rate before applying the plan and again after
-   applying it.
+   with a `neuron_tweak_manifest.json` record of every edit. The tool reloads the
+   saved directory afterwards and verifies that the recorded edits are present.
+   With `--evaluate`, the tool reports the refusal rate before applying the plan
+   and again after applying it.
 
 ## Commands
 

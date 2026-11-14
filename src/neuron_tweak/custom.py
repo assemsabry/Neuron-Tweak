@@ -342,6 +342,7 @@ def run_custom_pipeline(
         )
         console.print(f"[green]Saved edited model to {saved_path}[/]")
         console.print(f"* Wrote edit manifest to {manifest_path}")
+        console.print(f"* Saved model verified: {runtime.verify_saved(saved_path, results)}")
     else:
         console.print(
             "[yellow]The edit is applied in memory only. No model directory was "

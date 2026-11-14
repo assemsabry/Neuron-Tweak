@@ -22,7 +22,7 @@ from __future__ import annotations
 import gc
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from .neurons import NeuronEdit, NeuronPlan
 
@@ -367,6 +367,48 @@ class ModelRuntime:
         if self.tokenizer is not None:
             self.tokenizer.save_pretrained(target)
         return target
+
+    def verify_saved(
+        self,
+        directory: str | Path,
+        results: Sequence[AppliedEdit],
+        target: str = "down_proj",
+    ) -> bool:
+        """Reload a saved model directory and verify the applied edits.
+
+        Returns ``True`` when every applied vector in the saved directory still
+        carries the recorded new norm.
+        """
+        save_path = Path(directory).expanduser().resolve()
+        if not save_path.is_dir():
+            raise ModelRuntimeError(
+                f"Saved model directory not found: {save_path}"
+            )
+        reloaded = ModelRuntime(
+            str(save_path),
+            dtype=self.dtype,
+            device_map=self.device_map,
+            quantization=self.quantization,
+            trust_remote_code=self.trust_remote_code,
+        )
+        try:
+            reloaded.load()
+            ok = True
+            for result in results:
+                weight = reloaded.projection_weight(
+                    result.edit.layer, result.projection
+                )
+                vector = reloaded._vector_view(
+                    weight, result.projection, result.edit.neuron
+                )
+                actual_norm = float(vector.float().norm().item())
+                expected_norm = float(result.new_norm)
+                tolerance = 1e-4 * max(1.0, abs(expected_norm))
+                if abs(actual_norm - expected_norm) > tolerance:
+                    ok = False
+            return ok
+        finally:
+            reloaded.close()
 
     def close(self) -> None:
         """Release model references and empty the CUDA cache."""

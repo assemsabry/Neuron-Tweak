@@ -634,7 +634,7 @@ Completed:
   scale clamping, validation, and text plan export.
 - `src/neuron_tweak/model.py`: local model loading with dtype fallback,
   accelerator device map, MLP up/gate/down projection editing, reset, saving,
-  and forward-pass batch-size probing.
+  save verification, and forward-pass batch-size probing.
 - `src/neuron_tweak/custom.py`: interactive Custom Tweak editor and
   non-interactive apply/save pipeline, including before/after evaluation.
 - `src/neuron_tweak/analysis.py`: down-projection activation capture and
@@ -658,11 +658,11 @@ Completed:
   resolution, and CLI default merging.
 - `src/neuron_tweak/manifest.py`: edit manifests written next to saved models,
   plus manifest loading and plan reconstruction.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (102 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (105 tests
   passing, including tiny Llama editing, activation-capture, generation,
   evaluation, capability-aware Optuna study, identity pipeline, config,
-  batch-probe, manifest, manifest re-apply, plan-export, and generation
-  integration tests).
+  batch-probe, manifest, manifest re-apply, plan-export, generation, and
+  save-verification integration tests).
 
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 

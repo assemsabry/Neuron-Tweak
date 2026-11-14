@@ -26,6 +26,29 @@ def test_suggest_batch_size_requires_loaded_model(tiny_model_dir):
         suggest_batch_size(runtime)
 
 
+def test_verify_saved_round_trip(runtime, tmp_path):
+    plan = NeuronPlan.from_text("L1 N0 -1")
+    results = runtime.apply_plan(plan, target="down_proj")
+    saved_path = runtime.save(tmp_path / "edited")
+    assert runtime.verify_saved(saved_path, results)
+
+
+def test_verify_saved_detects_changed_weights(runtime, tmp_path):
+    plan = NeuronPlan.from_text("L1 N0 -1")
+    results = runtime.apply_plan(plan, target="down_proj")
+    saved_path = runtime.save(tmp_path / "edited")
+    runtime.apply_plan(NeuronPlan.from_text("L1 N0 -0.5"), target="down_proj")
+    runtime.save(tmp_path / "edited")
+    assert not runtime.verify_saved(saved_path, results)
+
+
+def test_verify_saved_requires_saved_directory(runtime):
+    plan = NeuronPlan.from_text("L1 N0 -1")
+    results = runtime.apply_plan(plan, target="down_proj")
+    with pytest.raises(ModelRuntimeError):
+        runtime.verify_saved("/nonexistent/model-dir", results)
+
+
 def test_model_info(runtime):
     info = runtime.info
     assert info.num_layers == 2
