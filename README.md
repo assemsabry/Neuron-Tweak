@@ -122,7 +122,9 @@ previous plan rather than stacking edits.
 
 With `--evaluate`, the tool generates responses for the held-out bad prompts
 before applying the plan and again after applying it, then reports the refusal
-rate (the fraction of responses containing a refusal marker) in both runs.
+rate (the fraction of responses containing a refusal marker) in both runs. It
+also reports the refusal rate and mean response length on the held-out good
+prompts, so over-suppression shows up as a capability regression.
 
 With `--study`, the tool runs an Optuna study over the selected neurons. Each
 trial samples `top_k` and a steering `delta`, applies the resulting plan, and

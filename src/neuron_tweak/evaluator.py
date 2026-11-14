@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Sequence
 
 from .scorer import DEFAULT_REFUSAL_MARKERS, RefusalRateScorer
@@ -12,6 +13,14 @@ if TYPE_CHECKING:
 
 class EvaluationError(RuntimeError):
     """Raised when model evaluation cannot run."""
+
+
+@dataclass(frozen=True)
+class ResponseMetrics:
+    """Generated-response metrics for one evaluation pass."""
+
+    refusal_rate: float
+    mean_length: float
 
 
 def generate_responses(
@@ -77,7 +86,7 @@ def generate_responses(
     return responses
 
 
-def evaluate_refusal_rate(
+def evaluate_responses(
     runtime: "ModelRuntime",
     tokenizer: Any | None,
     prompts: Sequence[str],
@@ -86,8 +95,8 @@ def evaluate_refusal_rate(
     max_new_tokens: int = 64,
     batch_size: int = 4,
     max_length: int = 512,
-) -> float:
-    """Generate responses and return the refusal rate."""
+) -> ResponseMetrics:
+    """Generate responses and return refusal and length metrics."""
     effective_tokenizer = tokenizer if tokenizer is not None else runtime.tokenizer
     if effective_tokenizer is None:
         raise EvaluationError(
@@ -101,5 +110,36 @@ def evaluate_refusal_rate(
         batch_size=batch_size,
         max_length=max_length,
     )
-    return scorer.score(responses)
+    mean_length = (
+        sum(len(response.split()) for response in responses) / len(responses)
+        if responses
+        else 0.0
+    )
+    return ResponseMetrics(
+        refusal_rate=scorer.score(responses),
+        mean_length=mean_length,
+    )
+
+
+def evaluate_refusal_rate(
+    runtime: "ModelRuntime",
+    tokenizer: Any | None,
+    prompts: Sequence[str],
+    scorer: RefusalRateScorer,
+    *,
+    max_new_tokens: int = 64,
+    batch_size: int = 4,
+    max_length: int = 512,
+) -> float:
+    """Generate responses and return the refusal rate."""
+    metrics = evaluate_responses(
+        runtime,
+        tokenizer,
+        prompts,
+        scorer,
+        max_new_tokens=max_new_tokens,
+        batch_size=batch_size,
+        max_length=max_length,
+    )
+    return metrics.refusal_rate
 

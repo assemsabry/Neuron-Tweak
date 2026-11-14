@@ -90,6 +90,11 @@ rate (the fraction of responses containing a refusal marker) in both runs:
 - After: reported after the edits are applied.
 - In dry-run mode, only the before rate is reported and no weights change.
 
+The same pass also reports good-prompt metrics before and after the edit: the
+refusal rate and the mean response length in words on the held-out good prompts.
+A large jump in the good-prompt refusal rate or a sharp drop in mean length is a
+sign that the suppression was too aggressive.
+
 ```bash
 neuron-tweak <model> --profile safety --evaluate --yes --save-directory ./out
 ```

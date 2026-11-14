@@ -2,7 +2,13 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from neuron_tweak.evaluator import EvaluationError, evaluate_refusal_rate, generate_responses
+from neuron_tweak.evaluator import (
+    EvaluationError,
+    ResponseMetrics,
+    evaluate_refusal_rate,
+    evaluate_responses,
+    generate_responses,
+)
 from neuron_tweak.scorer import RefusalRateScorer
 
 
@@ -50,3 +56,42 @@ def test_generate_responses_requires_prompts(runtime):
 
     with pytest.raises(EvaluationError):
         _generate(runtime, FakeGenerationTokenizer(), [])
+
+
+def test_evaluate_responses_returns_metrics(runtime):
+    metrics = evaluate_responses(
+        runtime,
+        FakeGenerationTokenizer(),
+        ["q1", "q2"],
+        RefusalRateScorer(),
+        max_new_tokens=4,
+        batch_size=2,
+        max_length=64,
+    )
+
+    assert isinstance(metrics, ResponseMetrics)
+    assert 0.0 <= metrics.refusal_rate <= 1.0
+    assert metrics.mean_length > 0.0
+
+
+def test_evaluate_refusal_rate_matches_metrics(runtime):
+    tokenizer = FakeGenerationTokenizer()
+    metrics = evaluate_responses(
+        runtime,
+        tokenizer,
+        ["q1"],
+        RefusalRateScorer(),
+        max_new_tokens=4,
+        batch_size=2,
+        max_length=64,
+    )
+    rate = evaluate_refusal_rate(
+        runtime,
+        tokenizer,
+        ["q1"],
+        RefusalRateScorer(),
+        max_new_tokens=4,
+        batch_size=2,
+        max_length=64,
+    )
+    assert rate == metrics.refusal_rate

@@ -641,8 +641,8 @@ Completed:
   Cohen's d neuron scoring.
 - `src/neuron_tweak/safety.py`: Safety Tweak localization, top-neuron
   selection, suppression plan, apply, and save pipeline.
-- `src/neuron_tweak/evaluator.py`: greedy response generation and refusal-rate
-  evaluation.
+- `src/neuron_tweak/evaluator.py`: greedy response generation, refusal-rate
+  scoring, and good-prompt response metrics.
 - `src/neuron_tweak/scorer.py`: scorer base class and refusal-rate scorer.
 - `src/neuron_tweak/optimizer.py`: Optuna neuron study helpers and the
   Safety Optuna objective.
@@ -650,22 +650,23 @@ Completed:
 - `src/neuron_tweak/main.py`: CLI with Safety Tweak, Identity Tweak, and
   Custom Tweak, including `--custom`, `--custom-file`, `--target`,
   `--layers`, `--top-neurons`, `--analysis-prompts`, `--dry-run`, `--evaluate`,
-  and `--save-directory`.
+  `--study`, and `--save-directory`.
 - `src/neuron_tweak/prompts.py`: prompt loading, placeholder expansion, and
   train/evaluation split.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (76 tests
-  passing, including tiny Llama editing, activation-capture, generation, and
-  Optuna study integration tests).
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (78 tests
+  passing, including tiny Llama editing, activation-capture, generation,
+  evaluation, and Optuna study integration tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).
 
 Not yet implemented:
 
-- Identity Tweak activation, logit-lens, and causal-tracing pipeline.
-- Optuna optimization and Pareto trial selection.
-- General response-based scoring and benchmark integration beyond the
-  refusal-rate before/after check.
+- Identity Tweak logit-lens and causal-tracing refinement beyond the
+  contrastive activation pipeline.
+- Full Pareto objective selection that trades refusal rate against capability
+  metrics; the current study optimizes the held-out refusal rate only.
+- Capability benchmarks beyond the refusal rate and mean response length.
 - Batch-size auto-tuning and general response generation.
 - Chat, benchmark, and upload actions.
 - Quantized-model editing (the current runtime requires full precision).

@@ -37,7 +37,7 @@ from .analysis import (
     top_neurons,
 )
 from .custom import render_applied, render_plan
-from .evaluator import evaluate_refusal_rate
+from .evaluator import evaluate_refusal_rate, evaluate_responses
 from .optimizer import NeuronStudy, TrialResult
 from .prompts import PromptDatasetError, load_workflow_prompts
 from .scorer import RefusalRateScorer
@@ -434,6 +434,8 @@ def run_safety_pipeline(
 
     evaluation_before: float | None = None
     evaluation_after: float | None = None
+    good_before = None
+    good_after = None
     if args.evaluate:
         scorer = RefusalRateScorer()
         evaluation_before = evaluate_refusal_rate(
@@ -445,10 +447,24 @@ def run_safety_pipeline(
             batch_size=args.eval_batch_size,
             max_length=args.max_sequence_length,
         )
+        good_before = evaluate_responses(
+            runtime,
+            runtime.tokenizer,
+            good_split.evaluation,
+            scorer,
+            max_new_tokens=args.eval_max_new_tokens,
+            batch_size=args.eval_batch_size,
+            max_length=args.max_sequence_length,
+        )
         console.print()
         console.print(
             f"* Refusal rate before edits: {evaluation_before:.3f} "
             f"({evaluation_before * 100:.1f}%)"
+        )
+        console.print(
+            f"* Good-prompt metrics before edits: refusal rate "
+            f"{good_before.refusal_rate:.3f}, mean length "
+            f"{good_before.mean_length:.1f} words"
         )
 
     if args.dry_run:
@@ -470,11 +486,21 @@ def run_safety_pipeline(
     render_applied(console, results)
 
     if args.evaluate:
+        scorer = RefusalRateScorer()
         evaluation_after = evaluate_refusal_rate(
             runtime,
             runtime.tokenizer,
             bad_split.evaluation,
-            RefusalRateScorer(),
+            scorer,
+            max_new_tokens=args.eval_max_new_tokens,
+            batch_size=args.eval_batch_size,
+            max_length=args.max_sequence_length,
+        )
+        good_after = evaluate_responses(
+            runtime,
+            runtime.tokenizer,
+            good_split.evaluation,
+            scorer,
             max_new_tokens=args.eval_max_new_tokens,
             batch_size=args.eval_batch_size,
             max_length=args.max_sequence_length,
@@ -483,6 +509,11 @@ def run_safety_pipeline(
         console.print(
             f"* Refusal rate after edits: {evaluation_after:.3f} "
             f"({evaluation_after * 100:.1f}%)"
+        )
+        console.print(
+            f"* Good-prompt metrics after edits: refusal rate "
+            f"{good_after.refusal_rate:.3f}, mean length "
+            f"{good_after.mean_length:.1f} words"
         )
 
     save_directory = args.save_directory
