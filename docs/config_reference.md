@@ -109,6 +109,7 @@ command line or the interactive editor.
 | `--profile custom` | Select the Custom Tweak workflow. |
 | `--custom "L14 N8949 +1"` | Add one or more edits; repeatable and comma-friendly. |
 | `--custom-file PATH` | Read edits from a text file (`configs/custom.example.txt`). |
+| `--from-manifest PATH` | Apply the edits recorded in a saved model's `neuron_tweak_manifest.json`. |
 | `--max-scale N` | Maximum multiplicative scale (default `10`). |
 | `--target PROJECTION` | `down_proj` (default), `up_proj`, `gate_proj`, or `all`. |
 | `--interactive` | Open the editor even when `--custom` entries are present. |

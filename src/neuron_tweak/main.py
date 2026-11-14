@@ -13,6 +13,7 @@ from .analysis import AnalysisError
 from .banner import print_banner
 from .config import ConfigError, config_value, load_config, resolve_config_path
 from .custom import render_plan, run_custom_pipeline, save_plan_to
+from .manifest import ManifestError, load_manifest, plan_from_manifest
 from .model import (
     TARGETS,
     ModelRuntime,
@@ -88,6 +89,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--custom-file",
         metavar="PATH",
         help="Text file with one or more custom neuron specifications.",
+    )
+    parser.add_argument(
+        "--from-manifest",
+        metavar="PATH",
+        help=(
+            "Apply the edits recorded in a saved model's "
+            "neuron_tweak_manifest.json."
+        ),
     )
     parser.add_argument(
         "--max-scale",
@@ -357,13 +366,36 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
     if args.max_scale <= 0:
         console.print("[red]--max-scale must be greater than zero.[/]")
         return
+    if args.from_manifest and (args.custom or args.custom_file):
+        console.print(
+            "[red]Use either --from-manifest or --custom/--custom-file, "
+            "not both.[/]"
+        )
+        return
 
     plan = NeuronPlan(max_scale=args.max_scale)
     try:
-        specs = collect_custom_specs(args)
-        for spec in specs:
-            plan.add_specs(spec)
-    except (NeuronSpecError, OSError) as error:
+        if args.from_manifest:
+            manifest = load_manifest(args.from_manifest)
+            manifest_target = str(manifest.get("target", "down_proj"))
+            if manifest_target != args.target:
+                console.print(
+                    f"[red]Manifest target is {manifest_target}; pass "
+                    f"--target {manifest_target} to apply it.[/]"
+                )
+                return
+            plan = plan_from_manifest(manifest, max_scale=args.max_scale)
+            manifest_model = str(manifest.get("model_id", ""))
+            if manifest_model and manifest_model != model:
+                console.print(
+                    f"[yellow]Manifest was written for {manifest_model}; "
+                    f"applying to {model}.[/]"
+                )
+        else:
+            specs = collect_custom_specs(args)
+            for spec in specs:
+                plan.add_specs(spec)
+    except (NeuronSpecError, OSError, ManifestError) as error:
         console.print(f"[red]{error}[/]")
         return
 

@@ -9,8 +9,13 @@ from typing import Any, Sequence
 
 from . import __version__
 from .model import AppliedEdit, ModelInfo
+from .neurons import DEFAULT_MAX_SCALE, NeuronEdit, NeuronPlan
 
 MANIFEST_NAME = "neuron_tweak_manifest.json"
+
+
+class ManifestError(RuntimeError):
+    """Raised when a manifest cannot be loaded or applied."""
 
 
 def build_manifest(
@@ -50,3 +55,53 @@ def write_manifest(directory: str | Path, manifest: dict[str, Any]) -> Path:
     path = Path(directory) / MANIFEST_NAME
     path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return path
+
+
+def load_manifest(path: str | Path) -> dict[str, Any]:
+    """Load and validate a manifest written by :func:`write_manifest`."""
+    manifest_path = Path(path)
+    if not manifest_path.is_file():
+        raise ManifestError(f"Manifest not found: {manifest_path}")
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except OSError as error:
+        raise ManifestError(
+            f"Could not read {manifest_path}: {error}"
+        ) from error
+    except json.JSONDecodeError as error:
+        raise ManifestError(
+            f"Invalid manifest JSON in {manifest_path}: {error}"
+        ) from error
+    if not isinstance(data, dict) or data.get("tool") != "neuron-tweak":
+        raise ManifestError(f"Not a Neuron Tweak manifest: {manifest_path}")
+    if not isinstance(data.get("edits"), list):
+        raise ManifestError(f"Manifest has no edits list: {manifest_path}")
+    return data
+
+
+def plan_from_manifest(
+    manifest: dict[str, Any],
+    max_scale: float = DEFAULT_MAX_SCALE,
+) -> NeuronPlan:
+    """Rebuild a neuron plan from a manifest's edit entries."""
+    plan = NeuronPlan(max_scale=max_scale)
+    for entry in manifest.get("edits", []):
+        try:
+            layer = int(entry["layer"])
+            neuron = int(entry["neuron"])
+            delta = float(entry["delta"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise ManifestError(
+                f"Invalid manifest edit entry: {entry!r}"
+            ) from error
+        plan.add(
+            NeuronEdit(
+                layer=layer,
+                neuron=neuron,
+                delta=delta,
+                max_scale=max_scale,
+            )
+        )
+    if not plan:
+        raise ManifestError("Manifest contains no neuron edits")
+    return plan

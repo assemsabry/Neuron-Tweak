@@ -656,11 +656,12 @@ Completed:
   train/evaluation split.
 - `src/neuron_tweak/config.py`: TOML loading, nested value lookup, config path
   resolution, and CLI default merging.
-- `src/neuron_tweak/manifest.py`: edit manifests written next to saved models.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (97 tests
+- `src/neuron_tweak/manifest.py`: edit manifests written next to saved models,
+  plus manifest loading and plan reconstruction.
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (101 tests
   passing, including tiny Llama editing, activation-capture, generation,
   evaluation, capability-aware Optuna study, identity pipeline, config,
-  batch-probe, manifest, and plan-export integration tests).
+  batch-probe, manifest, manifest re-apply, and plan-export integration tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).

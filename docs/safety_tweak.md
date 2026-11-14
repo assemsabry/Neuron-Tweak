@@ -147,8 +147,18 @@ projection vector:
 }
 ```
 
-The manifest makes an edit auditable and easy to reproduce, for example by
-feeding the layer and neuron numbers back into Custom Tweak.
+The manifest makes an edit auditable and easy to reproduce. Apply the recorded
+edits to the same model with Custom Tweak:
+
+```bash
+neuron-tweak <model> --profile custom \
+  --from-manifest ./out/neuron_tweak_manifest.json \
+  --save-directory ./out-copy
+```
+
+`--from-manifest` uses the target projection recorded in the manifest; pass
+`--target` if the manifest was written for a different projection. Layer and
+neuron numbers can also be copied into `--custom` specifications by hand.
 
 ## What the edit changes
 

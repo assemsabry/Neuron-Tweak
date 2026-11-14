@@ -97,6 +97,11 @@ neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
 
 # Read a plan from a file and validate it without loading the model.
 neuron-tweak --profile custom --custom-file edits.txt --dry-run
+
+# Re-apply the edits recorded in a saved model's manifest.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
+  --from-manifest ./qwen-safety/neuron_tweak_manifest.json \
+  --save-directory ./qwen-safety-reapplied
 ```
 
 At startup the tool prints the Neuron Tweak banner and asks which neurons you
