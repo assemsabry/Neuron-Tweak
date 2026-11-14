@@ -633,8 +633,8 @@ Completed:
 - `src/neuron_tweak/neurons.py`: L/N/delta parsing, add/update/remove plans,
   scale clamping, and validation.
 - `src/neuron_tweak/model.py`: local model loading with dtype fallback,
-  accelerator device map, MLP up/gate/down projection editing, reset, and
-  saving.
+  accelerator device map, MLP up/gate/down projection editing, reset, saving,
+  and forward-pass batch-size probing.
 - `src/neuron_tweak/custom.py`: interactive Custom Tweak editor and
   non-interactive apply/save pipeline.
 - `src/neuron_tweak/analysis.py`: down-projection activation capture and
@@ -656,10 +656,10 @@ Completed:
   train/evaluation split.
 - `src/neuron_tweak/config.py`: TOML loading, nested value lookup, config path
   resolution, and CLI default merging.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (89 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (92 tests
   passing, including tiny Llama editing, activation-capture, generation,
-  evaluation, capability-aware Optuna study, identity pipeline, and config
-  integration tests).
+  evaluation, capability-aware Optuna study, identity pipeline, config, and
+  batch-probe integration tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).
@@ -671,6 +671,6 @@ Not yet implemented:
 - Full multi-objective Pareto studies; the current study uses a scalar
   refusal-plus-capability score.
 - Capability benchmarks beyond the refusal rate and mean response length.
-- Batch-size auto-tuning and general response generation.
+- General response generation beyond the evaluation pass.
 - Chat, benchmark, and upload actions.
 - Quantized-model editing (the current runtime requires full precision).

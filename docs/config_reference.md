@@ -73,6 +73,8 @@ optimization and export phases.
 | `--analysis-prompts` | `0` | Training prompts per class; `0` uses all 500. |
 | `--evaluation-size` | `100` | Held-out prompts per class. |
 | `--analysis-batch-size` | `8` | Prompts per forward pass. |
+| `--auto-batch-size` | off | Probe the model and pick the largest analysis batch size. |
+| `--auto-batch-size-max` | `64` | Upper bound for automatic batch-size probing. |
 | `--max-sequence-length` | `512` | Maximum tokens per prompt. |
 | `--top-neurons` | `10` | Neurons selected per layer. |
 | `--min-score` | `0.0` | Minimum Cohen's d. |

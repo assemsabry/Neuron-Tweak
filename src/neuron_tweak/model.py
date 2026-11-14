@@ -66,6 +66,77 @@ class AppliedEdit:
     new_norm: float
 
 
+def _vocab_size(runtime: "ModelRuntime") -> int:
+    """Return a usable token-id upper bound for probe inputs."""
+    tokenizer = runtime.tokenizer
+    vocab_size = getattr(tokenizer, "vocab_size", None)
+    if vocab_size:
+        return int(vocab_size)
+    embeddings = runtime.model.get_input_embeddings()
+    if embeddings is None:
+        raise ModelRuntimeError(
+            "Cannot determine the model vocabulary size for batch probing"
+        )
+    return int(embeddings.weight.shape[0])
+
+
+def suggest_batch_size(
+    runtime: "ModelRuntime",
+    *,
+    maximum: int = 64,
+    sequence_length: int = 128,
+    minimum: int = 1,
+) -> int:
+    """Probe forward passes and return the largest workable batch size.
+
+    CPU runs return ``maximum`` because they cannot hit a device memory limit.
+    CUDA and MPS runs double the batch size until a forward pass runs out of
+    memory, then return the last successful size.
+    """
+    if minimum < 1:
+        raise ModelRuntimeError("minimum batch size must be at least 1")
+    if maximum < minimum:
+        raise ModelRuntimeError(
+            "maximum batch size must be at least the minimum"
+        )
+    if not runtime.is_loaded:
+        raise ModelRuntimeError(
+            "Model must be loaded before probing the batch size"
+        )
+
+    device = runtime.info.device
+    if not (device.startswith("cuda") or device.startswith("mps")):
+        return maximum
+
+    torch = runtime._import_torch()
+    vocab_size = _vocab_size(runtime)
+    best = 0
+    size = minimum
+    while size <= maximum:
+        input_ids = None
+        try:
+            input_ids = torch.randint(
+                0, vocab_size, (size, sequence_length), device=device
+            )
+            with torch.no_grad():
+                runtime.model(input_ids=input_ids)
+            if device.startswith("cuda"):
+                torch.cuda.synchronize()
+            best = size
+        except RuntimeError as error:
+            if "out of memory" in str(error).lower():
+                break
+            raise
+        finally:
+            if input_ids is not None:
+                del input_ids
+            if device.startswith("cuda"):
+                torch.cuda.empty_cache()
+        size *= 2
+
+    return max(minimum, best)
+
+
 class ModelRuntime:
     """Load a local causal LM and edit its MLP neurons on the selected device."""
 

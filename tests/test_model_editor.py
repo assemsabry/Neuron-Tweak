@@ -3,8 +3,27 @@ import pytest
 torch = pytest.importorskip("torch")
 pytest.importorskip("transformers")
 
-from neuron_tweak.model import ModelRuntimeError
+from neuron_tweak.model import ModelRuntimeError, suggest_batch_size
 from neuron_tweak.neurons import NeuronPlan
+
+
+def test_suggest_batch_size_returns_maximum_on_cpu(runtime):
+    assert suggest_batch_size(runtime, maximum=16, sequence_length=8) == 16
+
+
+def test_suggest_batch_size_validates_bounds(runtime):
+    with pytest.raises(ModelRuntimeError):
+        suggest_batch_size(runtime, minimum=0)
+    with pytest.raises(ModelRuntimeError):
+        suggest_batch_size(runtime, maximum=2, minimum=4)
+
+
+def test_suggest_batch_size_requires_loaded_model(tiny_model_dir):
+    from neuron_tweak.model import ModelRuntime
+
+    runtime = ModelRuntime(str(tiny_model_dir), dtype="float32", device_map="cpu")
+    with pytest.raises(ModelRuntimeError):
+        suggest_batch_size(runtime)
 
 
 def test_model_info(runtime):

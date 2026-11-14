@@ -13,7 +13,12 @@ from .analysis import AnalysisError
 from .banner import print_banner
 from .config import ConfigError, config_value, load_config, resolve_config_path
 from .custom import render_plan, run_custom_pipeline
-from .model import TARGETS, ModelRuntime, ModelRuntimeError
+from .model import (
+    TARGETS,
+    ModelRuntime,
+    ModelRuntimeError,
+    suggest_batch_size,
+)
 from .neurons import NeuronPlan, NeuronSpecError
 from .safety import run_safety_pipeline
 from .system import detect_backend
@@ -116,6 +121,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=8,
         help="Batch size for activation capture (default: 8).",
+    )
+    parser.add_argument(
+        "--auto-batch-size",
+        action="store_true",
+        help="Probe the model and pick the largest analysis batch size.",
+    )
+    parser.add_argument(
+        "--auto-batch-size-max",
+        type=int,
+        default=64,
+        help="Upper bound for automatic batch-size probing (default: 64).",
     )
     parser.add_argument(
         "--analysis-prompts",
@@ -423,7 +439,29 @@ def validate_workflow_args(console: Console, args: argparse.Namespace) -> bool:
                 "[red]--study-capability-weight cannot be negative.[/]"
             )
             return False
+    if getattr(args, "auto_batch_size", False) and getattr(
+        args, "auto_batch_size_max", 0
+    ) <= 0:
+        console.print("[red]--auto-batch-size-max must be greater than zero.[/]")
+        return False
     return True
+
+
+def apply_auto_batch_size(
+    runtime: ModelRuntime,
+    console: Console,
+    args: argparse.Namespace,
+) -> None:
+    """Probe the model and override the analysis batch size when requested."""
+    if not getattr(args, "auto_batch_size", False):
+        return
+    batch = suggest_batch_size(
+        runtime,
+        maximum=args.auto_batch_size_max,
+        sequence_length=args.max_sequence_length,
+    )
+    args.analysis_batch_size = batch
+    console.print(f"* Auto analysis batch size: {batch}")
 
 
 def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
@@ -444,6 +482,7 @@ def run_safety(args: argparse.Namespace, model: str, console: Console) -> None:
         for line in info.lines():
             console.print(f"* {line}")
         console.print()
+        apply_auto_batch_size(runtime, console, args)
         run_safety_pipeline(runtime, console, args)
     except (ModelRuntimeError, AnalysisError, NeuronSpecError) as error:
         console.print(f"[red]{error}[/]")
@@ -470,6 +509,7 @@ def run_identity(args: argparse.Namespace, model: str, console: Console) -> None
         for line in info.lines():
             console.print(f"* {line}")
         console.print()
+        apply_auto_batch_size(runtime, console, args)
         run_safety_pipeline(
             runtime,
             console,

@@ -132,11 +132,16 @@ Defaults:
 - `down_proj` target and a delta of `-1` (delete the selected column).
 - Batch size 8 and maximum sequence length 512.
 
-Useful flags: `--analysis-batch-size`, `--analysis-prompts`,
+Useful flags: `--analysis-batch-size`, `--auto-batch-size`,
+`--auto-batch-size-max`, `--analysis-prompts`,
 `--max-sequence-length`, `--top-neurons`, `--min-score`, `--layers`,
 `--neuron-delta`, `--target`, `--evaluation-size`, `--seed`, `--yes`,
 `--dry-run`, `--evaluate`, `--eval-max-new-tokens`, `--eval-batch-size`, and
 `--save-directory`.
+
+With `--auto-batch-size`, the tool probes the model with growing forward-pass
+batches and uses the largest size that fits in device memory, capped by
+`--auto-batch-size-max`.
 
 The score is Cohen's d: `(mean_bad - mean_good) / pooled_std`. Positive scores
 mean the neuron is more active on refusal-triggering prompts. The plan is
