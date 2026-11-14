@@ -102,6 +102,10 @@ neuron-tweak --profile custom --custom-file edits.txt --dry-run
 neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
   --from-manifest ./qwen-safety/neuron_tweak_manifest.json \
   --save-directory ./qwen-safety-reapplied
+
+# Measure refusal rate and response length before and after the edit.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
+  --custom "L14 N8949 -1" --evaluate --yes --save-directory ./qwen-custom
 ```
 
 At startup the tool prints the Neuron Tweak banner and asks which neurons you

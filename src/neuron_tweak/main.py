@@ -363,8 +363,7 @@ def collect_custom_specs(args: argparse.Namespace) -> list[str]:
 
 
 def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
-    if args.max_scale <= 0:
-        console.print("[red]--max-scale must be greater than zero.[/]")
+    if not validate_workflow_args(console, args):
         return
     if args.from_manifest and (args.custom or args.custom_file):
         console.print(
@@ -428,7 +427,7 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
         for line in info.lines():
             console.print(f"* {line}")
 
-        interactive = args.interactive or not specs
+        interactive = args.interactive or not (args.custom or args.custom_file)
         run_custom_pipeline(
             runtime,
             plan,
@@ -436,6 +435,14 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
             target=args.target,
             save_directory=args.save_directory,
             save_plan=args.save_plan,
+            evaluate=args.evaluate,
+            good_prompts=getattr(args, "good_prompts", None),
+            bad_prompts=getattr(args, "bad_prompts", None),
+            evaluation_size=args.evaluation_size,
+            seed=args.seed,
+            eval_max_new_tokens=args.eval_max_new_tokens,
+            eval_batch_size=args.eval_batch_size,
+            max_sequence_length=args.max_sequence_length,
             interactive=interactive,
         )
     except ModelRuntimeError as error:

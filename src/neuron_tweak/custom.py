@@ -8,12 +8,15 @@ Hugging Face model directory.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 from rich.table import Table
 
+from .evaluator import evaluate_refusal_rate, evaluate_responses
 from .manifest import build_manifest, write_manifest
 from .neurons import NeuronPlan, NeuronSpecError, format_delta
+from .prompts import PromptDatasetError, load_workflow_prompts
+from .scorer import RefusalRateScorer
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -173,6 +176,31 @@ def edit_plan_interactive(
             )
 
 
+def resolve_evaluation_prompts(
+    console: "Console",
+    good_prompts: Sequence[str] | None,
+    bad_prompts: Sequence[str] | None,
+    evaluation_size: int,
+    seed: int | None,
+) -> tuple[list[str], list[str]]:
+    """Use injected evaluation prompts, or load the safety held-out sets."""
+    good = list(good_prompts or [])
+    bad = list(bad_prompts or [])
+    if not good or not bad:
+        try:
+            good_split, bad_split = load_workflow_prompts(
+                "safety",
+                evaluation_size=evaluation_size,
+                seed=seed,
+            )
+        except PromptDatasetError as error:
+            console.print(f"[red]{error}[/]")
+            return ([], [])
+        good = list(good_split.evaluation)
+        bad = list(bad_split.evaluation)
+    return good, bad
+
+
 def run_custom_pipeline(
     runtime: "ModelRuntime",
     plan: NeuronPlan,
@@ -181,6 +209,14 @@ def run_custom_pipeline(
     target: str = "down_proj",
     save_directory: str | None = None,
     save_plan: str | None = None,
+    evaluate: bool = False,
+    good_prompts: Sequence[str] | None = None,
+    bad_prompts: Sequence[str] | None = None,
+    evaluation_size: int = 100,
+    seed: int | None = 0,
+    eval_max_new_tokens: int = 64,
+    eval_batch_size: int = 4,
+    max_sequence_length: int = 512,
     interactive: bool = True,
 ) -> None:
     """Edit the plan, apply it to the model, and optionally save the result."""
@@ -195,6 +231,49 @@ def run_custom_pipeline(
     console.print(f"Target projection: [bold]{target}[/]")
     render_plan(console, plan, target)
     save_plan_to(console, plan, save_plan)
+
+    evaluation_before: float | None = None
+    evaluation_after: float | None = None
+    good_before = None
+    good_after = None
+    if evaluate:
+        good_prompts, bad_prompts = resolve_evaluation_prompts(
+            console,
+            good_prompts,
+            bad_prompts,
+            evaluation_size,
+            seed,
+        )
+        if good_prompts and bad_prompts:
+            scorer = RefusalRateScorer()
+            evaluation_before = evaluate_refusal_rate(
+                runtime,
+                runtime.tokenizer,
+                bad_prompts,
+                scorer,
+                max_new_tokens=eval_max_new_tokens,
+                batch_size=eval_batch_size,
+                max_length=max_sequence_length,
+            )
+            good_before = evaluate_responses(
+                runtime,
+                runtime.tokenizer,
+                good_prompts,
+                scorer,
+                max_new_tokens=eval_max_new_tokens,
+                batch_size=eval_batch_size,
+                max_length=max_sequence_length,
+            )
+            console.print()
+            console.print(
+                f"* Refusal rate before edits: {evaluation_before:.3f} "
+                f"({evaluation_before * 100:.1f}%)"
+            )
+            console.print(
+                f"* Good-prompt metrics before edits: refusal rate "
+                f"{good_before.refusal_rate:.3f}, mean length "
+                f"{good_before.mean_length:.1f} words"
+            )
 
     if interactive:
         import questionary
@@ -213,6 +292,37 @@ def run_custom_pipeline(
         return
 
     render_applied(console, results)
+
+    if evaluate and evaluation_before is not None and good_before is not None:
+        scorer = RefusalRateScorer()
+        evaluation_after = evaluate_refusal_rate(
+            runtime,
+            runtime.tokenizer,
+            bad_prompts,
+            scorer,
+            max_new_tokens=eval_max_new_tokens,
+            batch_size=eval_batch_size,
+            max_length=max_sequence_length,
+        )
+        good_after = evaluate_responses(
+            runtime,
+            runtime.tokenizer,
+            good_prompts,
+            scorer,
+            max_new_tokens=eval_max_new_tokens,
+            batch_size=eval_batch_size,
+            max_length=max_sequence_length,
+        )
+        console.print()
+        console.print(
+            f"* Refusal rate after edits: {evaluation_after:.3f} "
+            f"({evaluation_after * 100:.1f}%)"
+        )
+        console.print(
+            f"* Good-prompt metrics after edits: refusal rate "
+            f"{good_after.refusal_rate:.3f}, mean length "
+            f"{good_after.mean_length:.1f} words"
+        )
 
     if save_directory is None and interactive:
         import questionary

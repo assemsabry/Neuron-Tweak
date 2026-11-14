@@ -636,7 +636,7 @@ Completed:
   accelerator device map, MLP up/gate/down projection editing, reset, saving,
   and forward-pass batch-size probing.
 - `src/neuron_tweak/custom.py`: interactive Custom Tweak editor and
-  non-interactive apply/save pipeline.
+  non-interactive apply/save pipeline, including before/after evaluation.
 - `src/neuron_tweak/analysis.py`: down-projection activation capture and
   Cohen's d neuron scoring.
 - `src/neuron_tweak/safety.py`: Safety Tweak localization, top-neuron

@@ -1,8 +1,9 @@
 # Custom Tweak guide
 
 Custom Tweak gives direct control over individual MLP neurons. It does not use
-prompt datasets, scoring, or an optimizer. The user supplies a plan and the tool
-applies it to the model.
+prompt datasets, scoring, or an optimizer by default; the user supplies a plan
+and the tool applies it to the model. With `--evaluate`, it reuses the Safety
+Tweak held-out prompt sets for before and after refusal checks.
 
 ## Neuron address
 
@@ -107,10 +108,29 @@ neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
 
 # Parse and validate syntax without loading the model.
 neuron-tweak --profile custom --custom "L14 N8949 +1" --dry-run
+
+# Re-apply the edits recorded in a saved model's manifest.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
+  --from-manifest ./qwen-safety/neuron_tweak_manifest.json \
+  --save-directory ./qwen-safety-reapplied
 ```
 
 A plan file may contain one entry per line, commas, or semicolons. Empty lines
 and lines starting with `#` are ignored.
+
+## Evaluation
+
+With `--evaluate`, Custom Tweak loads the held-out Safety Tweak good and bad
+prompt sets, measures the refusal rate and response length before the plan is
+applied, applies the plan, and measures again:
+
+```bash
+neuron-tweak <model> --profile custom \
+  --custom "L14 N8949 -1" --evaluate --yes --save-directory ./out
+```
+
+This reports whether a manually chosen edit reduces refusals and how it
+changes harmless-prompt response quality.
 
 ## Applying and resetting
 
