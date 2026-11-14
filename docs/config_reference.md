@@ -87,7 +87,7 @@ optimization and export phases.
 | `--study` | off | Run an Optuna study over the selected safety neurons. |
 | `--study-trials` | `30` | Number of Optuna trials for the safety study. |
 | `--study-startup-trials` | `10` | Startup trials for the Optuna safety study. |
-| `--study-direction` | `minimize` | Study direction: `minimize` or `maximize`. |
+| `--study-direction` | profile default | `minimize` for Safety, `maximize` for Identity. |
 | `--study-apply-best` | off | Apply the best safety study trial and save it. |
 | `--study-capability-weight` | `0.5` | Weight of the good-prompt capability penalty in the study objective. |
 | `--save-directory` | none | Directory for the edited model. |

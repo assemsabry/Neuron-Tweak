@@ -643,7 +643,8 @@ Completed:
   selection, suppression plan, apply, and save pipeline.
 - `src/neuron_tweak/evaluator.py`: greedy response generation, refusal-rate
   scoring, and good-prompt response metrics.
-- `src/neuron_tweak/scorer.py`: scorer base class and refusal-rate scorer.
+- `src/neuron_tweak/scorer.py`: scorer base class, refusal-rate scorer, and
+  identity-match scorer.
 - `src/neuron_tweak/optimizer.py`: Optuna neuron study helpers and the
   Safety Optuna objective.
 - `src/neuron_tweak/system.py`: CUDA/ROCm/MPS/CPU backend detection.
@@ -655,7 +656,7 @@ Completed:
   train/evaluation split.
 - `src/neuron_tweak/config.py`: TOML loading, nested value lookup, config path
   resolution, and CLI default merging.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (86 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (89 tests
   passing, including tiny Llama editing, activation-capture, generation,
   evaluation, capability-aware Optuna study, identity pipeline, and config
   integration tests).

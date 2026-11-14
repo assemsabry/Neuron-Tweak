@@ -6,7 +6,7 @@ from neuron_tweak.analysis import NeuronScore
 from neuron_tweak.evaluator import evaluate_refusal_rate
 from neuron_tweak.optimizer import NeuronStudy, OptimizerError, TrialResult
 from neuron_tweak.safety import SafetyNeuronObjective, run_safety_study
-from neuron_tweak.scorer import RefusalRateScorer
+from neuron_tweak.scorer import IdentityMatchScorer, RefusalRateScorer
 
 
 def test_refusal_rate_scorer_counts_hits():
@@ -121,6 +121,35 @@ def test_safety_objective_includes_capability_penalty(runtime):
 
     # Both bad and good responses refuse, so the score is 1.0 + 0.5 * 1.0.
     assert objective(FakeTrial()) == pytest.approx(1.5)
+
+
+def test_safety_objective_goal_maximize_negates_metric(runtime):
+    objective = SafetyNeuronObjective(
+        runtime,
+        _make_neurons(2),
+        ["q1"],
+        scorer=IdentityMatchScorer(["i cannot"]),
+        max_new_tokens=4,
+        batch_size=2,
+        max_length=64,
+        tokenizer=RefusingGenerationTokenizer(),
+        heldout_good_prompts=["g1"],
+        capability_weight=0.5,
+        baseline_good_length=5.0,
+        goal=-1.0,
+    )
+
+    class FakeTrial:
+        params = {"top_k": 1, "delta": -1.0}
+
+        def suggest_int(self, name, low, high, **kwargs):
+            return int(self.params.get(name, low))
+
+        def suggest_float(self, name, low, high, **kwargs):
+            return float(self.params.get(name, low))
+
+    # Match rates are 1.0 on both sides, so the score is -1.0 - 0.5 * 1.0.
+    assert objective(FakeTrial()) == pytest.approx(-1.5)
 
 
 def test_run_safety_study_returns_best(runtime):

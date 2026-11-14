@@ -197,8 +197,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--study-direction",
         choices=["minimize", "maximize"],
-        default="minimize",
-        help="Study direction for the safety Optuna study (default: minimize).",
+        default=None,
+        help=(
+            "Study direction for the Optuna study. Defaults to minimize for "
+            "Safety and maximize for Identity."
+        ),
     )
     parser.add_argument(
         "--study-apply-best",

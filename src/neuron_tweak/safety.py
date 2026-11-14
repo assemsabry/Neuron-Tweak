@@ -40,7 +40,7 @@ from .custom import render_applied, render_plan
 from .evaluator import evaluate_refusal_rate, evaluate_responses
 from .optimizer import NeuronStudy, TrialResult
 from .prompts import PromptDatasetError, load_workflow_prompts
-from .scorer import RefusalRateScorer
+from .scorer import IdentityMatchScorer, RefusalRateScorer
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -174,7 +174,7 @@ class SafetyNeuronObjective:
         neurons: Sequence[NeuronScore],
         heldout_bad_prompts: Sequence[str],
         *,
-        scorer: RefusalRateScorer | None = None,
+        scorer: RefusalRateScorer | IdentityMatchScorer | None = None,
         max_new_tokens: int = 64,
         batch_size: int = 4,
         max_length: int = 512,
@@ -184,6 +184,7 @@ class SafetyNeuronObjective:
         heldout_good_prompts: Sequence[str] | None = None,
         capability_weight: float = 0.0,
         baseline_good_length: float | None = None,
+        goal: float = 1.0,
     ) -> None:
         self.runtime = runtime
         self.neurons = list(neurons)
@@ -198,6 +199,7 @@ class SafetyNeuronObjective:
         self.max_scale = max_scale
         self.capability_weight = capability_weight
         self.baseline_good_length = baseline_good_length
+        self.goal = goal
 
     def __call__(self, trial: Any) -> float:
         if hasattr(trial, "params"):
@@ -215,7 +217,7 @@ class SafetyNeuronObjective:
         selected = self.neurons[:top_k]
         plan = plan_from_scores(selected, delta=delta, max_scale=self.max_scale)
         self.runtime.apply_plan(plan, target=self.target)
-        bad_rate = evaluate_refusal_rate(
+        bad_metric = evaluate_refusal_rate(
             self.runtime,
             self.tokenizer,
             self.heldout_bad_prompts,
@@ -224,8 +226,9 @@ class SafetyNeuronObjective:
             batch_size=self.batch_size,
             max_length=self.max_length,
         )
+        score = self.goal * bad_metric
         if not self.heldout_good_prompts or self.capability_weight <= 0.0:
-            return bad_rate
+            return score
 
         good = evaluate_responses(
             self.runtime,
@@ -236,12 +239,12 @@ class SafetyNeuronObjective:
             batch_size=self.batch_size,
             max_length=self.max_length,
         )
-        penalty = good.refusal_rate
+        penalty = self.goal * good.refusal_rate
         if self.baseline_good_length and good.mean_length > 0:
             penalty += max(
                 0.0, 1.0 - good.mean_length / self.baseline_good_length
             )
-        return bad_rate + self.capability_weight * penalty
+        return score + self.capability_weight * penalty
 
 
 def run_safety_study(
@@ -254,10 +257,13 @@ def run_safety_study(
     tokenizer: Any | None = None,
     heldout_good_prompts: Sequence[str] | None = None,
     workflow: str = "Safety",
+    scorer: RefusalRateScorer | IdentityMatchScorer | None = None,
+    goal: float = 1.0,
 ) -> TrialResult | None:
     """Run the Optuna contrastive study and optionally apply the best trial."""
     from .optimizer import NeuronStudy
 
+    selected_scorer = scorer or RefusalRateScorer()
     capability_weight = float(getattr(args, "study_capability_weight", 0.0))
     baseline_good_length: float | None = None
     if heldout_good_prompts and capability_weight > 0.0:
@@ -265,14 +271,14 @@ def run_safety_study(
             runtime,
             tokenizer,
             heldout_good_prompts,
-            RefusalRateScorer(),
+            selected_scorer,
             max_new_tokens=args.eval_max_new_tokens,
             batch_size=args.eval_batch_size,
             max_length=args.max_sequence_length,
         )
         baseline_good_length = baseline.mean_length
         console.print(
-            f"* Baseline good-prompt refusal rate {baseline.refusal_rate:.3f}, "
+            f"* Baseline good-prompt score {baseline.refusal_rate:.3f}, "
             f"mean length {baseline.mean_length:.1f} words"
         )
 
@@ -289,12 +295,17 @@ def run_safety_study(
         heldout_good_prompts=heldout_good_prompts,
         capability_weight=capability_weight,
         baseline_good_length=baseline_good_length,
+        scorer=selected_scorer,
+        goal=goal,
+    )
+    direction = getattr(args, "study_direction", None) or (
+        "maximize" if goal < 0 else "minimize"
     )
     study = NeuronStudy(
         objective,
         n_trials=args.study_trials,
         n_startup_trials=args.study_startup_trials,
-        direction=args.study_direction,
+        direction=direction,
     )
     console.print()
     console.print(
@@ -302,7 +313,11 @@ def run_safety_study(
         f"{study.n_trials} trials[/]"
     )
     results = study.run()
-    ranked = sorted(results, key=lambda result: result.score)
+    ranked = sorted(
+        results,
+        key=lambda result: result.score,
+        reverse=direction == "maximize",
+    )
     best = ranked[0]
 
     table = Table(title=f"Optuna {workflow.lower()} study")
@@ -456,6 +471,23 @@ def run_safety_pipeline(
         )
         return
 
+    if profile == "identity" and identity_values:
+        scorer: RefusalRateScorer | IdentityMatchScorer = IdentityMatchScorer(
+            [
+                identity_values.get("model_name", ""),
+                identity_values.get("vendor", ""),
+                identity_values.get("owner", ""),
+                identity_values.get("founder", ""),
+                identity_values.get("product_line", ""),
+            ]
+        )
+        metric_label = "Identity match rate"
+        goal = -1.0
+    else:
+        scorer = RefusalRateScorer()
+        metric_label = "Refusal rate"
+        goal = 1.0
+
     if getattr(args, "study", False):
         run_safety_study(
             runtime,
@@ -467,6 +499,8 @@ def run_safety_pipeline(
             runtime.tokenizer,
             heldout_good_prompts=good_split.evaluation,
             workflow=workflow,
+            scorer=scorer,
+            goal=goal,
         )
         return
 
@@ -494,7 +528,6 @@ def run_safety_pipeline(
     good_before = None
     good_after = None
     if args.evaluate:
-        scorer = RefusalRateScorer()
         evaluation_before = evaluate_refusal_rate(
             runtime,
             runtime.tokenizer,
@@ -515,11 +548,11 @@ def run_safety_pipeline(
         )
         console.print()
         console.print(
-            f"* Refusal rate before edits: {evaluation_before:.3f} "
+            f"* {metric_label} before edits: {evaluation_before:.3f} "
             f"({evaluation_before * 100:.1f}%)"
         )
         console.print(
-            f"* Good-prompt metrics before edits: refusal rate "
+            f"* Good-prompt {metric_label.lower()} before edits: "
             f"{good_before.refusal_rate:.3f}, mean length "
             f"{good_before.mean_length:.1f} words"
         )
@@ -543,7 +576,6 @@ def run_safety_pipeline(
     render_applied(console, results)
 
     if args.evaluate:
-        scorer = RefusalRateScorer()
         evaluation_after = evaluate_refusal_rate(
             runtime,
             runtime.tokenizer,
@@ -564,11 +596,11 @@ def run_safety_pipeline(
         )
         console.print()
         console.print(
-            f"* Refusal rate after edits: {evaluation_after:.3f} "
+            f"* {metric_label} after edits: {evaluation_after:.3f} "
             f"({evaluation_after * 100:.1f}%)"
         )
         console.print(
-            f"* Good-prompt metrics after edits: refusal rate "
+            f"* Good-prompt {metric_label.lower()} after edits: "
             f"{good_after.refusal_rate:.3f}, mean length "
             f"{good_after.mean_length:.1f} words"
         )

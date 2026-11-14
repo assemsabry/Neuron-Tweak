@@ -63,3 +63,33 @@ class RefusalRateScorer(Scorer):
             if any(marker in lowered for marker in self.markers):
                 hits += 1
         return hits / len(responses)
+
+
+class IdentityMatchScorer(Scorer):
+    """Fraction of responses that mention any target identity string."""
+
+    def __init__(
+        self,
+        targets: Sequence[str],
+        name: str = "IdentityMatch",
+    ) -> None:
+        self.name = name
+        self.targets = tuple(
+            target.strip().lower()
+            for target in targets
+            if target and target.strip()
+        )
+
+    @property
+    def optimization(self) -> str:
+        return "maximize"
+
+    def score(self, responses: Sequence[str]) -> float:
+        if not responses or not self.targets:
+            return 0.0
+        hits = 0
+        for response in responses:
+            lowered = response.lower()
+            if any(target in lowered for target in self.targets):
+                hits += 1
+        return hits / len(responses)

@@ -54,6 +54,7 @@ class NeuronStudy:
             ) from error
 
         study = optuna.create_study(direction=self.direction)
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
         study.optimize(self.objective, n_trials=self.n_trials)
 
         results: list[TrialResult] = []

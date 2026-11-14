@@ -9,7 +9,7 @@ from neuron_tweak.evaluator import (
     evaluate_responses,
     generate_responses,
 )
-from neuron_tweak.scorer import RefusalRateScorer
+from neuron_tweak.scorer import IdentityMatchScorer, RefusalRateScorer
 
 
 class FakeGenerationTokenizer:
@@ -37,6 +37,14 @@ def test_refusal_rate_scorer_counts_hits():
 
     custom = RefusalRateScorer(markers=["sure"])
     assert custom.score(["sure thing", "I cannot"]) == 0.5
+
+
+def test_identity_match_scorer_counts_hits():
+    scorer = IdentityMatchScorer(["Acme", "AcmeBot"])
+    assert scorer.optimization == "maximize"
+    assert scorer.score(["I am AcmeBot.", "No idea."]) == 0.5
+    assert scorer.score([]) == 0.0
+    assert IdentityMatchScorer([]).score(["anything"]) == 0.0
 
 
 def test_generate_responses_batches(runtime):
