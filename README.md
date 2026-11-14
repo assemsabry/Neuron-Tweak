@@ -31,6 +31,8 @@ Safety Tweak and Custom Tweak are implemented end to end.
   automated before/after generation scoring is available with `--evaluate`.
 - Custom Tweak: model loading, L/N/delta parsing, add/update/remove editing,
   direct MLP projection scaling, reset, and model saving.
+- Saved models include a `neuron_tweak_manifest.json` record of every edited
+  neuron, projection, delta, and vector norm.
 - Identity Tweak: runs the same contrastive capture/scoring/suppression
   pipeline with the target-identity and current-identity prompt sets. With
   `--evaluate`, it reports the identity match rate on the held-out prompts, and

@@ -38,6 +38,7 @@ from .analysis import (
 )
 from .custom import render_applied, render_plan
 from .evaluator import evaluate_refusal_rate, evaluate_responses
+from .manifest import build_manifest, write_manifest
 from .optimizer import NeuronStudy, TrialResult
 from .prompts import PromptDatasetError, load_workflow_prompts
 from .scorer import IdentityMatchScorer, RefusalRateScorer
@@ -390,8 +391,13 @@ def run_safety_study(
     console.print()
     render_applied(console, results_applied)
     if getattr(args, "save_directory", None):
-        target = runtime.save(args.save_directory)
-        console.print(f"[green]Saved edited model to {target}[/]")
+        saved_path = runtime.save(args.save_directory)
+        manifest_path = write_manifest(
+            saved_path,
+            build_manifest(runtime.info, args.target, results_applied),
+        )
+        console.print(f"[green]Saved edited model to {saved_path}[/]")
+        console.print(f"* Wrote edit manifest to {manifest_path}")
     else:
         console.print(
             "[yellow]The edit is applied in memory only. No model directory "
@@ -614,8 +620,13 @@ def run_safety_pipeline(
         ).ask()
 
     if save_directory:
-        target = runtime.save(save_directory)
-        console.print(f"[green]Saved edited model to {target}[/]")
+        saved_path = runtime.save(save_directory)
+        manifest_path = write_manifest(
+            saved_path,
+            build_manifest(runtime.info, args.target, results),
+        )
+        console.print(f"[green]Saved edited model to {saved_path}[/]")
+        console.print(f"* Wrote edit manifest to {manifest_path}")
     else:
         console.print(
             "[yellow]The edit is applied in memory only. No model directory "

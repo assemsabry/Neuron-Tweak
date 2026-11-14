@@ -31,9 +31,10 @@ applied from the original weights on every run.
    contribution. Use `--neuron-delta -0.5` for a gentler suppression, or a
    positive delta to amplify.
 6. **Apply and save.** The plan is applied to `--target` (default `down_proj`),
-   and the edited model is written to `--save-directory` when provided. With
-   `--evaluate`, the tool reports the refusal rate before applying the plan and
-   again after applying it.
+   and the edited model is written to `--save-directory` when provided, along
+   with a `neuron_tweak_manifest.json` record of every edit. With `--evaluate`,
+   the tool reports the refusal rate before applying the plan and again after
+   applying it.
 
 ## Commands
 
@@ -118,6 +119,35 @@ With `--study`, the tool runs an Optuna study over the selected safety neurons.
 neuron-tweak <model> --profile safety \
   --study --study-trials 30 --study-apply-best --save-directory ./out
 ```
+
+## Edit manifest
+
+Every saved model directory includes `neuron_tweak_manifest.json`. It records
+the tool version, source model, target projection, and one entry per edited
+projection vector:
+
+```json
+{
+  "tool": "neuron-tweak",
+  "version": "0.1.0",
+  "model_id": "Qwen/Qwen3-4B-Instruct-2507",
+  "target": "down_proj",
+  "edits": [
+    {
+      "layer": 14,
+      "neuron": 8949,
+      "delta": -1.0,
+      "scale": 0.0,
+      "projection": "down_proj",
+      "original_norm": 1.23,
+      "new_norm": 0.0
+    }
+  ]
+}
+```
+
+The manifest makes an edit auditable and easy to reproduce, for example by
+feeding the layer and neuron numbers back into Custom Tweak.
 
 ## What the edit changes
 

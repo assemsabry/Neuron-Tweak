@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from rich.table import Table
 
+from .manifest import build_manifest, write_manifest
 from .neurons import NeuronPlan, NeuronSpecError, format_delta
 
 if TYPE_CHECKING:
@@ -205,11 +206,15 @@ def run_custom_pipeline(
 
     if save_directory:
         try:
-            target = runtime.save(save_directory)
+            saved_path = runtime.save(save_directory)
         except Exception as error:  # noqa: BLE001 - show a friendly save error
             console.print(f"[red]Could not save the model: {error}[/]")
             return
-        console.print(f"[green]Saved edited model to {target}[/]")
+        manifest_path = write_manifest(
+            saved_path, build_manifest(runtime.info, target, results)
+        )
+        console.print(f"[green]Saved edited model to {saved_path}[/]")
+        console.print(f"* Wrote edit manifest to {manifest_path}")
     else:
         console.print(
             "[yellow]The edit is applied in memory only. No model directory was "
