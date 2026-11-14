@@ -90,13 +90,14 @@ def render_score_summary(
     selected: Sequence[NeuronScore],
     *,
     min_score: float,
+    title: str = "Safety neuron localization",
 ) -> None:
     """Print a compact per-layer summary and the global top neurons."""
     by_layer: dict[int, list[NeuronScore]] = {}
     for score in selected:
         by_layer.setdefault(score.layer, []).append(score)
 
-    table = Table(title="Safety neuron localization")
+    table = Table(title=title)
     table.add_column("Layer", justify="right")
     table.add_column("Selected", justify="right")
     table.add_column("Max Cohen d", justify="right")
@@ -180,10 +181,14 @@ class SafetyNeuronObjective:
         target: str = "down_proj",
         max_scale: float = 10.0,
         tokenizer: Any | None = None,
+        heldout_good_prompts: Sequence[str] | None = None,
+        capability_weight: float = 0.0,
+        baseline_good_length: float | None = None,
     ) -> None:
         self.runtime = runtime
         self.neurons = list(neurons)
         self.heldout_bad_prompts = list(heldout_bad_prompts)
+        self.heldout_good_prompts = list(heldout_good_prompts or [])
         self.scorer = scorer or RefusalRateScorer()
         self.tokenizer = tokenizer
         self.max_new_tokens = max_new_tokens
@@ -191,6 +196,8 @@ class SafetyNeuronObjective:
         self.max_length = max_length
         self.target = target
         self.max_scale = max_scale
+        self.capability_weight = capability_weight
+        self.baseline_good_length = baseline_good_length
 
     def __call__(self, trial: Any) -> float:
         if hasattr(trial, "params"):
@@ -208,7 +215,7 @@ class SafetyNeuronObjective:
         selected = self.neurons[:top_k]
         plan = plan_from_scores(selected, delta=delta, max_scale=self.max_scale)
         self.runtime.apply_plan(plan, target=self.target)
-        return evaluate_refusal_rate(
+        bad_rate = evaluate_refusal_rate(
             self.runtime,
             self.tokenizer,
             self.heldout_bad_prompts,
@@ -217,6 +224,24 @@ class SafetyNeuronObjective:
             batch_size=self.batch_size,
             max_length=self.max_length,
         )
+        if not self.heldout_good_prompts or self.capability_weight <= 0.0:
+            return bad_rate
+
+        good = evaluate_responses(
+            self.runtime,
+            self.tokenizer,
+            self.heldout_good_prompts,
+            self.scorer,
+            max_new_tokens=self.max_new_tokens,
+            batch_size=self.batch_size,
+            max_length=self.max_length,
+        )
+        penalty = good.refusal_rate
+        if self.baseline_good_length and good.mean_length > 0:
+            penalty += max(
+                0.0, 1.0 - good.mean_length / self.baseline_good_length
+            )
+        return bad_rate + self.capability_weight * penalty
 
 
 def run_safety_study(
@@ -227,9 +252,29 @@ def run_safety_study(
     selected: Sequence[NeuronScore],
     heldout_bad_prompts: Sequence[str],
     tokenizer: Any | None = None,
+    heldout_good_prompts: Sequence[str] | None = None,
+    workflow: str = "Safety",
 ) -> TrialResult | None:
-    """Run the Optuna safety study and optionally apply the best trial."""
+    """Run the Optuna contrastive study and optionally apply the best trial."""
     from .optimizer import NeuronStudy
+
+    capability_weight = float(getattr(args, "study_capability_weight", 0.0))
+    baseline_good_length: float | None = None
+    if heldout_good_prompts and capability_weight > 0.0:
+        baseline = evaluate_responses(
+            runtime,
+            tokenizer,
+            heldout_good_prompts,
+            RefusalRateScorer(),
+            max_new_tokens=args.eval_max_new_tokens,
+            batch_size=args.eval_batch_size,
+            max_length=args.max_sequence_length,
+        )
+        baseline_good_length = baseline.mean_length
+        console.print(
+            f"* Baseline good-prompt refusal rate {baseline.refusal_rate:.3f}, "
+            f"mean length {baseline.mean_length:.1f} words"
+        )
 
     objective = SafetyNeuronObjective(
         runtime,
@@ -241,6 +286,9 @@ def run_safety_study(
         target=args.target,
         max_scale=args.max_scale,
         tokenizer=tokenizer,
+        heldout_good_prompts=heldout_good_prompts,
+        capability_weight=capability_weight,
+        baseline_good_length=baseline_good_length,
     )
     study = NeuronStudy(
         objective,
@@ -250,13 +298,14 @@ def run_safety_study(
     )
     console.print()
     console.print(
-        f"[bold]Running safety Optuna study: {study.n_trials} trials[/]"
+        f"[bold]Running {workflow.lower()} Optuna study: "
+        f"{study.n_trials} trials[/]"
     )
     results = study.run()
     ranked = sorted(results, key=lambda result: result.score)
     best = ranked[0]
 
-    table = Table(title="Optuna safety study")
+    table = Table(title=f"Optuna {workflow.lower()} study")
     table.add_column("Trial", justify="right")
     table.add_column("Top neurons", justify="right")
     table.add_column("Delta", justify="right")
@@ -270,7 +319,7 @@ def run_safety_study(
         )
     console.print(table)
     console.print(
-        f"[green]Best trial: {best.trial_number} with refusal rate "
+        f"[green]Best trial: {best.trial_number} with objective score "
         f"{best.score:.4f}[/]"
     )
 
@@ -301,7 +350,7 @@ def run_safety_study(
                 )
             )
         chosen = questionary.select(
-            "Select a safety study trial to apply:",
+            f"Select a {workflow.lower()} study trial to apply:",
             choices=choices,
         ).ask()
         if chosen is None:
@@ -316,7 +365,8 @@ def run_safety_study(
         import questionary
 
         confirmed = questionary.confirm(
-            f"Apply safety trial {chosen.trial_number} to the model?", default=True
+            f"Apply {workflow.lower()} trial {chosen.trial_number} to the model?",
+            default=True,
         ).ask()
         if not confirmed:
             console.print("Edits were not applied.")
@@ -343,6 +393,7 @@ def run_safety_pipeline(
     identity_values: dict[str, str] | None = None,
 ) -> None:
     """Localize neurons, build a suppression plan, apply, and save."""
+    workflow = "Identity" if profile == "identity" else "Safety"
     try:
         good_split, bad_split = load_workflow_prompts(
             profile,
@@ -414,12 +465,18 @@ def run_safety_pipeline(
             selected,
             bad_split.evaluation,
             runtime.tokenizer,
+            heldout_good_prompts=good_split.evaluation,
+            workflow=workflow,
         )
         return
 
     console.print()
     render_score_summary(
-        console, scores, selected, min_score=args.min_score
+        console,
+        scores,
+        selected,
+        min_score=args.min_score,
+        title=f"{workflow} neuron localization",
     )
 
     plan = plan_from_scores(
@@ -427,7 +484,7 @@ def run_safety_pipeline(
     )
     console.print()
     console.print(
-        f"Safety plan: {len(plan)} neurons, target "
+        f"{workflow} plan: {len(plan)} neurons, target "
         f"[bold]{args.target}[/], delta {args.neuron_delta:+.2f}"
     )
     render_plan(console, plan, args.target)
@@ -475,7 +532,7 @@ def run_safety_pipeline(
         import questionary
 
         confirmed = questionary.confirm(
-            "Apply these Safety Tweak edits to the model?", default=True
+            f"Apply these {workflow} Tweak edits to the model?", default=True
         ).ask()
         if not confirmed:
             console.print("Edits were not applied.")

@@ -196,6 +196,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Apply the best safety study trial and save it.",
     )
     parser.add_argument(
+        "--study-capability-weight",
+        type=float,
+        default=0.5,
+        help=(
+            "Weight of the good-prompt capability penalty in the study "
+            "objective (default: 0.5)."
+        ),
+    )
+    parser.add_argument(
         "--identity-model-name",
         default="the assistant",
         help="Target identity model name for the Identity workflow.",
@@ -395,6 +404,11 @@ def validate_workflow_args(console: Console, args: argparse.Namespace) -> bool:
             return False
         if args.study_startup_trials < 0:
             console.print("[red]--study-startup-trials cannot be negative.[/]")
+            return False
+        if getattr(args, "study_capability_weight", 0.0) < 0:
+            console.print(
+                "[red]--study-capability-weight cannot be negative.[/]"
+            )
             return False
     return True
 

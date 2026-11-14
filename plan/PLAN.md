@@ -653,9 +653,10 @@ Completed:
   `--study`, and `--save-directory`.
 - `src/neuron_tweak/prompts.py`: prompt loading, placeholder expansion, and
   train/evaluation split.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (78 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (79 tests
   passing, including tiny Llama editing, activation-capture, generation,
-  evaluation, and Optuna study integration tests).
+  evaluation, capability-aware Optuna study, and identity pipeline integration
+  tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).
@@ -664,8 +665,8 @@ Not yet implemented:
 
 - Identity Tweak logit-lens and causal-tracing refinement beyond the
   contrastive activation pipeline.
-- Full Pareto objective selection that trades refusal rate against capability
-  metrics; the current study optimizes the held-out refusal rate only.
+- Full multi-objective Pareto studies; the current study uses a scalar
+  refusal-plus-capability score.
 - Capability benchmarks beyond the refusal rate and mean response length.
 - Batch-size auto-tuning and general response generation.
 - Chat, benchmark, and upload actions.

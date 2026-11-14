@@ -78,6 +78,7 @@ working directory takes precedence, or use `--config path/to/file.toml`.
 | `--study-startup-trials` | `10` | Startup trials for the Optuna safety study. |
 | `--study-direction` | `minimize` | Study direction: `minimize` or `maximize`. |
 | `--study-apply-best` | off | Apply the best safety study trial and save it. |
+| `--study-capability-weight` | `0.5` | Weight of the good-prompt capability penalty in the study objective. |
 | `--save-directory` | none | Directory for the edited model. |
 
 The shared `--target`, `--max-scale`, `--save-directory`, `--dtype`,
