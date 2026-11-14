@@ -44,6 +44,27 @@ A CUDA build of PyTorch is recommended. The tool loads the model on the GPU
 when CUDA, ROCm, or MPS is available and reports the detected backend at
 startup.
 
+## Configuration
+
+The CLI reads `./config.toml` when it exists, or a file passed with `--config`.
+Command-line flags take precedence over configuration values.
+
+```toml
+profile = "safety"
+
+[model]
+dtype = "float32"
+device_map = "auto"
+
+[prompts]
+evaluation_size = 100
+split_seed = 0
+```
+
+```bash
+neuron-tweak <model> --config configs/safety.toml
+```
+
 ## Usage
 
 ```bash

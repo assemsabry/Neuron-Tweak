@@ -1,8 +1,18 @@
 # Configuration reference
 
-Neuron Tweak loads `configs/default.toml` plus a workflow configuration such as
-`configs/safety.toml` or `configs/identity.toml`. A local `config.toml` in the
-working directory takes precedence, or use `--config path/to/file.toml`.
+Neuron Tweak reads `./config.toml` when it exists, or the file passed with
+`--config path/to/file.toml`. Command-line flags override configuration values.
+The configuration is loaded before the workflow starts, so it can select the
+profile and set model and prompt defaults.
+
+The CLI currently consumes these keys:
+
+- `profile`
+- `[model] dtype`, `[model] quantization`, `[model] device_map`
+- `[prompts] evaluation_size`, `[prompts] split_seed`
+
+The other keys document the full configuration schema and are reserved for the
+optimization and export phases.
 
 ## Top-level
 
@@ -14,6 +24,7 @@ working directory takes precedence, or use `--config path/to/file.toml`.
 
 | Key | Default | Meaning |
 |-----|---------|---------|
+| `dtype` | `"auto"` | Single dtype override: `"auto"`, `"float16"`, `"bfloat16"`, or `"float32"`. |
 | `dtypes` | `["auto", "float16", "bfloat16", "float32"]` | Dtypes tried during loading. |
 | `quantization` | `"none"` | `"none"` or `"bnb_4bit"`. |
 | `device_map` | `"auto"` | Accelerate device placement. |

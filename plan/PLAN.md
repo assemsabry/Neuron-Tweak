@@ -653,10 +653,12 @@ Completed:
   `--study`, and `--save-directory`.
 - `src/neuron_tweak/prompts.py`: prompt loading, placeholder expansion, and
   train/evaluation split.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (79 tests
+- `src/neuron_tweak/config.py`: TOML loading, nested value lookup, config path
+  resolution, and CLI default merging.
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (86 tests
   passing, including tiny Llama editing, activation-capture, generation,
-  evaluation, capability-aware Optuna study, and identity pipeline integration
-  tests).
+  evaluation, capability-aware Optuna study, identity pipeline, and config
+  integration tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).

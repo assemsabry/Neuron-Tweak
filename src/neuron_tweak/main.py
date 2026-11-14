@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from rich.console import Console
@@ -10,6 +11,7 @@ from rich.console import Console
 from . import __version__
 from .analysis import AnalysisError
 from .banner import print_banner
+from .config import ConfigError, config_value, load_config, resolve_config_path
 from .custom import render_plan, run_custom_pipeline
 from .model import TARGETS, ModelRuntime, ModelRuntimeError
 from .neurons import NeuronPlan, NeuronSpecError
@@ -59,6 +61,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=profile_type,
         metavar="{safety,identity,custom}",
         help="Neuron workflow to run.",
+    )
+    parser.add_argument(
+        "--config",
+        metavar="PATH",
+        help=(
+            "TOML configuration file. Defaults to ./config.toml when it "
+            "exists. Command-line flags override configuration values."
+        ),
     )
     parser.add_argument(
         "--custom",
@@ -477,6 +487,49 @@ def run_identity(args: argparse.Namespace, model: str, console: Console) -> None
         runtime.close()
 
 
+def apply_config(args: argparse.Namespace, argv: list[str]) -> None:
+    """Apply config-file values for options the user did not pass."""
+    path = resolve_config_path(args.config)
+    if path is None:
+        return
+    config = load_config(path)
+
+    declared: set[str] = set()
+    for token in argv:
+        if token.startswith("--"):
+            declared.add(token.split("=", 1)[0])
+
+    profile = config_value(config, "profile")
+    if profile is not None and "--profile" not in declared:
+        try:
+            args.profile = profile_type(str(profile))
+        except argparse.ArgumentTypeError as error:
+            raise ConfigError(str(error)) from error
+
+    for key in ("dtype", "quantization", "device_map"):
+        value = config_value(config, "model", key)
+        if value is not None and f"--{key.replace('_', '-')}" not in declared:
+            setattr(args, key, value)
+
+    evaluation_size = config_value(config, "prompts", "evaluation_size")
+    if evaluation_size is not None and "--evaluation-size" not in declared:
+        try:
+            args.evaluation_size = int(evaluation_size)
+        except (TypeError, ValueError) as error:
+            raise ConfigError(
+                "prompts.evaluation_size must be an integer"
+            ) from error
+
+    split_seed = config_value(config, "prompts", "split_seed")
+    if split_seed is not None and "--seed" not in declared:
+        try:
+            args.seed = int(split_seed)
+        except (TypeError, ValueError) as error:
+            raise ConfigError(
+                "prompts.split_seed must be an integer"
+            ) from error
+
+
 def run() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -488,6 +541,12 @@ def run() -> None:
         "Training-free neuron-level modification for local language models."
     )
     console.print()
+
+    try:
+        apply_config(args, sys.argv[1:])
+    except ConfigError as error:
+        console.print(f"[red]{error}[/]")
+        return
 
     custom_dry_run = args.profile == "custom" and args.dry_run
     model = args.model
