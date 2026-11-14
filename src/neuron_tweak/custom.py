@@ -21,6 +21,21 @@ if TYPE_CHECKING:
     from .model import AppliedEdit, ModelRuntime
 
 
+def save_plan_to(
+    console: "Console", plan: NeuronPlan, path: str | None
+) -> bool:
+    """Write the plan as text and report the path; return whether it saved."""
+    if not path or not plan:
+        return False
+    try:
+        saved = plan.save(path)
+    except OSError as error:
+        console.print(f"[red]Could not write the plan: {error}[/]")
+        return False
+    console.print(f"* Wrote neuron plan to {saved}")
+    return True
+
+
 def render_plan(
     console: "Console", plan: NeuronPlan, target: str = "down_proj"
 ) -> None:
@@ -165,6 +180,7 @@ def run_custom_pipeline(
     *,
     target: str = "down_proj",
     save_directory: str | None = None,
+    save_plan: str | None = None,
     interactive: bool = True,
 ) -> None:
     """Edit the plan, apply it to the model, and optionally save the result."""
@@ -178,6 +194,7 @@ def run_custom_pipeline(
     console.print()
     console.print(f"Target projection: [bold]{target}[/]")
     render_plan(console, plan, target)
+    save_plan_to(console, plan, save_plan)
 
     if interactive:
         import questionary

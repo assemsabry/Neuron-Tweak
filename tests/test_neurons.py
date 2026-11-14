@@ -125,3 +125,18 @@ def test_effect_strings():
     assert NeuronEdit(1, 0, -0.5).effect == "reduce x0.50"
     assert NeuronEdit(1, 0, 1.0).effect == "amplify x2.00"
     assert NeuronEdit(1, 0, 0.0).effect == "no change"
+
+
+def test_plan_save_round_trips(tmp_path):
+    plan = NeuronPlan.from_text("L2 N1 -1, L1 N0 +0.5")
+    path = plan.save(tmp_path / "plans" / "plan.txt")
+
+    assert path.read_text(encoding="utf-8") == "L1 N0 +0.5\nL2 N1 -1\n"
+    assert NeuronPlan.from_text(path.read_text(encoding="utf-8")).to_text() == (
+        plan.to_text()
+    )
+
+
+def test_plan_save_empty_plan(tmp_path):
+    path = NeuronPlan().save(tmp_path / "empty.txt")
+    assert path.read_text(encoding="utf-8") == ""

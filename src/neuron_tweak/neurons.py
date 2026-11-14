@@ -29,6 +29,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 DEFAULT_MAX_SCALE = 10.0
 
@@ -204,6 +205,14 @@ class NeuronPlan:
 
     def to_text(self) -> str:
         return "\n".join(edit.to_line() for edit in self.sorted())
+
+    def save(self, path: str | Path) -> Path:
+        """Write the plan as text that ``from_text`` can read back."""
+        target = Path(path).expanduser().resolve()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        text = self.to_text()
+        target.write_text(text + ("\n" if text else ""), encoding="utf-8")
+        return target
 
     @classmethod
     def from_text(cls, text: str, max_scale: float = DEFAULT_MAX_SCALE) -> "NeuronPlan":

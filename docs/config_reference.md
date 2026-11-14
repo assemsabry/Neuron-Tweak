@@ -93,6 +93,7 @@ optimization and export phases.
 | `--study-apply-best` | off | Apply the best safety study trial and save it. |
 | `--study-capability-weight` | `0.5` | Weight of the good-prompt capability penalty in the study objective. |
 | `--save-directory` | none | Directory for the edited model. |
+| `--save-plan` | none | Write the final neuron plan to a text file. |
 
 The shared `--target`, `--max-scale`, `--save-directory`, `--dtype`,
 `--device-map`, `--quantization`, and `--trust-remote-code` options also apply

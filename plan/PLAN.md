@@ -631,7 +631,7 @@ Completed:
 - `data/identity/bad_prompts.txt`: 600 unique current-identity prompts.
 - `src/neuron_tweak/banner.py`: blocky "NEURON TWEAK" banner, default green.
 - `src/neuron_tweak/neurons.py`: L/N/delta parsing, add/update/remove plans,
-  scale clamping, and validation.
+  scale clamping, validation, and text plan export.
 - `src/neuron_tweak/model.py`: local model loading with dtype fallback,
   accelerator device map, MLP up/gate/down projection editing, reset, saving,
   and forward-pass batch-size probing.
@@ -657,10 +657,10 @@ Completed:
 - `src/neuron_tweak/config.py`: TOML loading, nested value lookup, config path
   resolution, and CLI default merging.
 - `src/neuron_tweak/manifest.py`: edit manifests written next to saved models.
-- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (95 tests
+- `configs/`, `docs/`, `scripts/`, and `tests/` folder structure (97 tests
   passing, including tiny Llama editing, activation-capture, generation,
   evaluation, capability-aware Optuna study, identity pipeline, config,
-  batch-probe, and manifest integration tests).
+  batch-probe, manifest, and plan-export integration tests).
 - `pyproject.toml`, `README.md`, and `data/README.md`.
 
 Total built-in prompts: 2,400 (600 good and 600 bad for each workflow).

@@ -124,6 +124,12 @@ neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety \
 # Analyze only the middle layers and select 5 neurons per layer.
 neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety \
   --layers 10-20 --top-neurons 5 --save-directory ./qwen-safety
+
+# Export the selected plan, then re-apply it later with Custom Tweak.
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile safety \
+  --dry-run --save-plan plan.txt
+neuron-tweak Qwen/Qwen3-4B-Instruct-2507 --profile custom \
+  --custom-file plan.txt --save-directory ./qwen-safety
 ```
 
 Defaults:
@@ -138,8 +144,8 @@ Useful flags: `--analysis-batch-size`, `--auto-batch-size`,
 `--auto-batch-size-max`, `--analysis-prompts`,
 `--max-sequence-length`, `--top-neurons`, `--min-score`, `--layers`,
 `--neuron-delta`, `--target`, `--evaluation-size`, `--seed`, `--yes`,
-`--dry-run`, `--evaluate`, `--eval-max-new-tokens`, `--eval-batch-size`, and
-`--save-directory`.
+`--dry-run`, `--evaluate`, `--eval-max-new-tokens`, `--eval-batch-size`,
+`--save-plan`, and `--save-directory`.
 
 With `--auto-batch-size`, the tool probes the model with growing forward-pass
 batches and uses the largest size that fits in device memory, capped by

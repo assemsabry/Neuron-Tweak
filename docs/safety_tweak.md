@@ -82,6 +82,7 @@ neuron-tweak <model> --profile safety --target all --save-directory ./out
 | `--eval-max-new-tokens` | `64` | Max new tokens for evaluation responses. |
 | `--eval-batch-size` | `4` | Batch size for evaluation responses. |
 | `--save-directory` | none | Directory for the edited model. |
+| `--save-plan` | none | Write the final neuron plan to a text file. |
 
 ## Evaluation
 

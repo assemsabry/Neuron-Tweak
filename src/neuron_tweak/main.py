@@ -12,7 +12,7 @@ from . import __version__
 from .analysis import AnalysisError
 from .banner import print_banner
 from .config import ConfigError, config_value, load_config, resolve_config_path
-from .custom import render_plan, run_custom_pipeline
+from .custom import render_plan, run_custom_pipeline, save_plan_to
 from .model import (
     TARGETS,
     ModelRuntime,
@@ -270,6 +270,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory where the edited model is saved.",
     )
     parser.add_argument(
+        "--save-plan",
+        metavar="PATH",
+        help="Write the final neuron plan to a text file.",
+    )
+    parser.add_argument(
         "--interactive",
         action="store_true",
         help="Open the Custom Tweak editor even when specifications are provided.",
@@ -368,6 +373,7 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
             f"[bold]Parsed custom neuron plan[/] (target: {args.target})"
         )
         render_plan(console, plan, args.target)
+        save_plan_to(console, plan, args.save_plan)
         if not plan:
             console.print(
                 "[yellow]No edits were parsed. Pass --custom or --custom-file.[/]"
@@ -397,6 +403,7 @@ def run_custom(args: argparse.Namespace, model: str, console: Console) -> None:
             console,
             target=args.target,
             save_directory=args.save_directory,
+            save_plan=args.save_plan,
             interactive=interactive,
         )
     except ModelRuntimeError as error:

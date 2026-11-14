@@ -36,7 +36,7 @@ from .analysis import (
     score_neurons,
     top_neurons,
 )
-from .custom import render_applied, render_plan
+from .custom import render_applied, render_plan, save_plan_to
 from .evaluator import evaluate_refusal_rate, evaluate_responses
 from .manifest import build_manifest, write_manifest
 from .optimizer import NeuronStudy, TrialResult
@@ -377,6 +377,7 @@ def run_safety_study(
     plan = plan_from_scores(selected[:top_k], delta=delta, max_scale=args.max_scale)
     console.print()
     render_plan(console, plan, args.target)
+    save_plan_to(console, plan, getattr(args, "save_plan", None))
     if not args.yes and sys.stdin.isatty():
         import questionary
 
@@ -528,6 +529,7 @@ def run_safety_pipeline(
         f"[bold]{args.target}[/], delta {args.neuron_delta:+.2f}"
     )
     render_plan(console, plan, args.target)
+    save_plan_to(console, plan, getattr(args, "save_plan", None))
 
     evaluation_before: float | None = None
     evaluation_after: float | None = None
